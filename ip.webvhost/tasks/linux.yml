@@ -7,11 +7,13 @@
     dest: '/etc/apache2/conf-available/{{ item.name }}.conf'
     backup: True
   with_items: '{{ webvhost_conf }}'
+  when: webvhost_engine == 'apache'
 
 # Enable non-SSL vhosts, assuming they might be needed for SSL validation.
 - include: 'linux-apache.yml'
   vars:
     do_ssl: False
+  when: webvhost_engine == 'apache'
 
 - name: Ensure document root exists
   file:
@@ -27,6 +29,7 @@
 - include: 'linux-apache.yml'
   vars:
     do_ssl: True
+  when: webvhost_engine == 'apache'
 
 - name: Determine if MSAD is in use
   set_fact:
