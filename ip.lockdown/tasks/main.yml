@@ -1,0 +1,10 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+# tasks file for ip.lockdown
+
+#- include: windows.yml
+#  when: ansible_os_family == 'Windows'
+
+- include: linux.yml
+  when: ansible_os_family == 'Debian' or ansible_os_family == 'RedHat'
+

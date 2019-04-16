@@ -1,0 +1,40 @@
+---
+# defaults file for roles/ip.remotelog
+remotelog_server: '{{ ip_log_server }}'
+remotelog_nxlog_root: C:\Program Files (x86)\nxlog
+remotelog_nxlog_extensions:
+  - name: json
+    module: xm_json
+    fields:
+    fieldtypes:
+    delimiter:
+  - name: syslog
+    module: xm_syslog
+    fields:
+    fieldtypes:
+    delimiter:
+remotelog_nxlog_inputs:
+  - name: eventlog
+    module: im_msvistalog
+    file:
+    exec:
+      - to_json();
+remotelog_nxlog_outputs:
+  - name: ossec
+    module: om_tcp
+    host: '{{ remotelog_server }}'
+    port: '{{ remotelog_port }}'
+remotelog_nxlog_routes:
+  - index: 1
+    path: 'eventlog => ossec'
+remotelog_local_owner: root
+remotelog_local_group: adm
+remotelog_local_filemode: '0640'
+remotelog_local_dirmode: '0755'
+remotelog_local_umask: '0022'
+remotelog_local_spool: /var/spool/rsyslog
+remotelog_local_enabled: false
+remotelog_local_auth_enabled: true
+remotelog_local_mail_enabled: false
+remotelog_local_debug_enabled: false
+remotelog_local_emergency_enabled: true

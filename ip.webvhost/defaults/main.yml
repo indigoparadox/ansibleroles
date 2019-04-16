@@ -1,0 +1,26 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+# defaults file for ip.webvhost
+
+webvhost_sites: []
+webvhost_modules: []
+webvhost_conf: []
+webvhost_ssl_path: '/etc/ssl'
+webvhost_msad_ssl_tmp: '/tmp/msadcrt'
+webvhost_le_user:
+  name: letsencrypt
+  uid: 559
+  group: letsencrypt
+  gid: 559
+  shell: '/bin/bash'
+  home: '/var/lib/letsencrypt'
+  groups: ['www-data']
+webvhost_htdocs_owner: www-data
+webvhost_htdocs_group: www-data
+webvhost_ssl_owner: www-data
+webvhost_ssl_group: www-data
+webvhost_le_dirs:
+  work: '{{ webvhost_le_user.home }}/work'
+  config: '/etc/letsencrypt'
+  logs: '{{ webvhost_le_user.home }}/logs'
+

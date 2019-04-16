@@ -1,0 +1,67 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Create local groups
+  group:
+    name: '{{ item.group }}'
+    gid: '{{ item.gid }}'
+    state: present
+  when: item.create_group and newuser_local
+  with_items: '{{ newuser_create }}'
+
+- name: Create local users
+  user:
+    name: '{{ item.name }}'
+    shell: '{{ item.shell }}'
+    uid: '{{ item.uid }}'
+    group: '{{ item.gid }}'
+    home: '{{ newuser_local_home }}/{{ item.name }}'
+    createhome: yes
+    groups: '{{ item.aux_groups }}'
+  when: newuser_local
+  with_items: '{{ newuser_create }}'
+
+- name: Create user home subdirectories
+  file:
+    path: '{{ newuser_local_home }}/{{ item[0].name }}/{{ item[1] }}'
+    state: directory
+    owner: '{{ item[0].name }}'
+    group: '{{ item[0].group }}'
+    mode: 0700
+  with_nested:
+    - '{{ newuser_create }}'
+    - '{{ newuser_homedirs }}'
+  when: item[0].copy_configs
+
+- name: Copy user configfiles
+  copy:
+    src: '../../ConfigFiles/{{ item[0].name }}/{{ item[1].name }}'
+    dest: '{{ newuser_local_home }}/{{ item[0].name }}/{{ item[1].name }}'
+    owner: '{{ item[0].name }}'
+    group: '{{ item[0].group }}'
+    mode: "{{ item[1].mode | default('0600') }}"
+  with_nested:
+    - '{{ newuser_create }}'
+    - '{{ newuser_configfiles }}'
+  when: item[0].copy_configs
+
+- name: Create authorized_keys2
+  copy:
+    content: ''
+    dest: '{{ newuser_local_home }}/{{ item.name }}/.ssh/authorized_keys2'
+    force: no
+    owner: '{{ item.name }}'
+    group: '{{ item.group }}'
+    mode: 0600
+  with_items: '{{ newuser_create }}'
+  when: newuser_private is defined and item.set_auth
+
+- name: Add user public key
+  lineinfile:
+    path: '{{ newuser_local_home }}/{{ item.0.name }}/.ssh/authorized_keys2'
+    line: '{{ item.1.sshkey }}'
+  with_together:
+    - '{{ newuser_create }}'
+    - '{{ newuser_private }}'
+  when: newuser_private is defined and item.0.set_auth
+

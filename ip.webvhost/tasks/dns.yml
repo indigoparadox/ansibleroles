@@ -1,0 +1,29 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Get external IP
+  uri:
+    url: https://ifconfig.me/ip
+    return_content: yes
+  register: external_ip
+  when: not webvhost_external_ip is defined
+
+- name: Store external IP
+  set_fact:
+    webvhost_external_ip: '{{ external_ip.content }}'
+  when: not webvhost_external_ip is defined
+
+- name: Update Cloudflare IPv4 DNS
+  cloudflare_dns:
+    account_api_token: '{{ item.cf_api | default(webvhost_cf_api) }}'
+    account_email: '{{ item.cf_email | default(webvhost_cf_email) }}'
+    type: A
+    proxied: '{{ item.cf_proxy | default(no) }}'
+    record: '{{ item.server_name }}'
+    solo: true
+    state: present
+    value: '{{ item.ip | default(webvhost_external_ip) }}'
+    zone: '{{ item.cf_zone | default(webvhost_cf_zone) }}'
+  when: item.dns == 'cloudflare'
+  with_items: "{{ webvhost_sites | selectattr('dns', 'defined') | list }}"
+

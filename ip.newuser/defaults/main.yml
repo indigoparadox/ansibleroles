@@ -1,0 +1,9 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+# defaults file for roles/ip.newuser
+newuser_local_home: '/home'
+newuser_configfiles:
+newuser_homedirs:
+  - Downloads
+  - .ssh
+newuser_local: false

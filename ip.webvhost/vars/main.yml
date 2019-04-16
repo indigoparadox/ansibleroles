@@ -1,0 +1,5 @@
+---
+# vars file for ip.webvhost
+
+webvhost_certbot_config_dir: '/etc/letsencrypt'
+
