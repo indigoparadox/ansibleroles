@@ -35,7 +35,7 @@
 
 - name: Copy user configfiles
   copy:
-    src: '../../ConfigFiles/{{ item[0].name }}/{{ item[1].name }}'
+    src: '{{ newuser_config_root }}/{{ item[0].name }}/{{ item[1].name }}'
     dest: '{{ newuser_local_home }}/{{ item[0].name }}/{{ item[1].name }}'
     owner: '{{ item[0].name }}'
     group: '{{ item[0].group }}'
