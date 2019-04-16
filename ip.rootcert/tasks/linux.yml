@@ -1,0 +1,17 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Upload root SSL certificate
+  copy:
+    src: '{{ rootcert_local_crt_path }}/{{ item }}'
+    dest: '{{ rootcert_ca_path }}/{{ item }}'
+    owner: '{{ rootcert_ssl_owner }}'
+    group: '{{ rootcert_ssl_group }}'
+    mode: '0644'
+  with_items: '{{ rootcerts }}'
+  register: new_cert
+
+- name: Update CA certificates
+  command: update-ca-certificates
+  when: new_cert.changed
+

@@ -1,0 +1,16 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+# defaults file for ip.alerts
+alerts_nscp_product_id: '{6AAED478-7B63-42FF-8BB8-7BD226DE1F5B}'
+alerts_nrpe: false
+alerts_nscp_root: C:\Program Files\NSClient++
+alerts_host: '{{ ip_log_server }}'
+alerts_nrpe_pid: /var/run/nagios/nrpe.pid
+alerts_nrpe_user: nagios
+alerts_nrpe_group: nagios
+alerts_nrpe_cmd_timeout: 60
+alerts_nrpe_connect_timeout: 300
+alerts_nrpe_port: 5666
+alerts_nrpe_listen: false
+alerts_nrpe_cmd_prefix: false
+alerts_checks: []

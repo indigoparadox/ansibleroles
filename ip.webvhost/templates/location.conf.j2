@@ -1,0 +1,58 @@
+{% if location.alias is defined %}
+	Alias {{ location.alias }} {{ location.path }}
+
+{% endif %}
+	<{{ tagname }} {{ location.path }}>
+		Options {{ location.options | default(webvhost_directory_options) | join(' ') }}
+
+{% if location.proxy_url is defined %}
+		ProxyPass {{ location.proxy_url }}
+		ProxyPassReverse {{ location.proxy_url }}
+{% endif %}
+{% if location.auth_type is defined %}
+		AuthType {{ location.auth_type }}
+{% if location.auth_type == 'form' %}
+		AuthFormProvider {{ location.auth_options.provider }}
+		AuthFormLoginRequiredLocation {{ location.auth_options.form_login_required_location }}
+{% endif %}
+{% if location.auth_options.provider == 'ldap' %}
+		AuthLDAPBindAuthoritative {{ location.auth_options.ldap_bind_authoritative | default('Off') }}
+		AuthLDAPURL {{ location.auth_options.ldap_url }}
+		AuthLDAPBindDN {{ location.auth_options.ldap_bind_dn }}
+		AuthLDAPBindPassword {{ location.auth_options.ldap_bind_password }}
+		LDAPReferrals {{ location.auth_options.ldap_referrals | default('off') }}
+{% endif %}
+{% if location.auth_options.name is defined %}
+		AuthName {{ location.auth_options.name }}
+{% endif %}
+		Require valid-user
+
+{% endif %}
+{% if location.auth_ips is defined %}
+{% for auth_ip in location.auth_ips %}
+		Require ip {{ auth_ip }}
+{% endfor %}
+
+{% endif %}
+{% if not location.auth_type is defined and not location.auth_ips is defined %}
+		Require all granted
+
+{% endif %}
+{% if location.allow_override is defined %}
+		AllowOverride {{ location.allow_override }}
+{% else %}
+		AllowOverride None
+{% endif %}
+
+{% if location.session_path is defined %}
+		Session On
+		SessionCookieName session path={{ location.session_path }}
+
+{% endif %}
+{% if location.error_documents is defined %}
+{% for error_doc in location.error_documents %}
+		ErrorDocument {{ error_doc.code }} {{ error_doc.path }}
+{% endfor %}
+{% endif %}
+	</{{ tagname }}>
+

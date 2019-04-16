@@ -1,0 +1,29 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+# vars file for ip.lockdown
+
+lockdown_deb_pkgs:
+  - debsums
+  - needrestart
+  - fail2ban
+  - debsecan
+  - apt-listbugs
+
+lockdown_postfix_cfg: /etc/postfix/main.cf
+
+lockdown_sshd:
+  - { key: PermitRootLogin, value: without-password }
+  - { key: AllowTcpForwarding, value: 'no' }
+  - { key: Compression, value: 'no' }
+
+lockdown_sysctl_linux:
+  - { key: net.ipv6.conf.all.accept_redirects, value: 0 }
+  - { key: net.ipv6.conf.default.accept_redirects, value: 0 }
+  - { key: net.ipv4.conf.all.send_redirects, value: 0 }
+  - { key: net.ipv4.conf.all.accept_redirects, value: 0 }
+  - { key: net.ipv4.conf.default.accept_redirects, value: 0 }
+  - { key: net.ipv4.conf.default.accept_source_route, value: 0 }
+  - { key: net.ipv4.tcp_timestamps, value: 0 }
+
+lockdown_fail2ban_rules: []
+

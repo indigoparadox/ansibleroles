@@ -1,0 +1,25 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Install nxlog
+  win_package:
+    creates_service: nxlog
+    state: present
+    path: '{{ remotelog_nxlog_installer }}'
+    arguments: /quiet
+  become: yes
+  become_method: runas
+  become_flags: logon_type=new_credentials logon_flags=netcredentials_only
+
+- name: Upload nxlog config file
+  win_template:
+    src: templates/nxlog.conf.j2
+    dest: '{{ remotelog_nxlog_root }}\\conf\\nxlog.conf'
+  register: nxlog
+
+- name: Restart nxlog
+  win_service:
+    name: nxlog
+    state: restarted
+  when: nxlog.changed
+

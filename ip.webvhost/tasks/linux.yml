@@ -1,0 +1,54 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Upload apache config snippets
+  template:
+    src: 'templates/conf.conf.j2'
+    dest: '/etc/apache2/conf-available/{{ item.name }}.conf'
+    backup: True
+  with_items: '{{ webvhost_conf }}'
+
+# Enable non-SSL vhosts, assuming they might be needed for SSL validation.
+- include: 'linux-apache.yml'
+  vars:
+    do_ssl: False
+
+- name: Ensure document root exists
+  file:
+    path: '{{ item.document_root }}'
+    state: directory
+    owner: '{{ item.user | default(webvhost_htdocs_owner) }}'
+    group: '{{ item.group | default(webvhost_htdocs_group) }}'
+  when: 
+    - not item.enabled is defined or item.enabled == True
+  with_items: "{{ webvhost_sites | selectattr('document_root', 'defined') | list }}"
+
+# Enable SSL-enabled vhosts, now that they should have certificates.
+- include: 'linux-apache.yml'
+  vars:
+    do_ssl: True
+
+- name: Determine if MSAD is in use
+  set_fact:
+    msad_in_use: True
+  with_items:
+    - '{{ webvhost_sites }}'
+  when:
+    - item.ssl is defined
+    - item.ssl == 'msad'
+
+- include_tasks: 'linux-msad.yml'
+  when: msad_in_use is defined and msad_in_use
+
+- name: Determine if ACME is in use
+  set_fact:
+    acme_in_use: True
+  with_items:
+    - '{{ webvhost_sites }}'
+  when:
+    - item.ssl is defined
+    - item.ssl == 'acme'
+
+- include_tasks: 'linux-acme.yml'
+  when: acme_in_use is defined and acme_in_use
+

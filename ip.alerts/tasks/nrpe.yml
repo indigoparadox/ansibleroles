@@ -1,0 +1,24 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Install NRPE
+  package:
+    name:
+      - nagios-nrpe-server
+      - nagios-plugins-contrib
+    state: present
+  when: alerts_nrpe
+
+- name: Upload NRPE config
+  template:
+    src: templates/nrpe.cfg.j2
+    dest: /etc/nagios/nrpe.cfg
+  register: nrpe
+  when: alerts_nrpe
+
+- name: Restart NRPE
+  service:
+    name: nagios-nrpe-server
+    state: restarted
+  when: nrpe.changed and alerts_nrpe
+

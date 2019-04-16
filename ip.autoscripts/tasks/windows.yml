@@ -1,0 +1,36 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Copy script to host
+  win_copy:
+    src: '{{ autoscripts_root_src }}/{{ item.script }}'
+    dest: '{{ autoscripts_win_dest }}/{{ item.script }}'
+  with_items: '{{ autoscripts }}'
+
+- name: Copy script config templates to host
+  win_template:
+    src: '{{ item.1.src }}'
+    dest: '{{ item.1.dest }}'
+  with_subelements:
+    - "{{ autoscripts | selectattr('templates', 'defined') | list }}"
+    - templates
+
+- name: Schedule scripts to run automatically
+  win_scheduled_task:
+    name: '{{ item.1.name }}'
+    state: present
+    triggers:
+    - start_boundary: '2019-03-11T{{ item.1.hour }}:{{ item.1.minute }}:00'
+      days_of_week: '{{ item.1.weekdays }}'
+      type: '{{ item.1.enabled }}'
+    enabled: yes
+    user: '{{ item.1.user }}'
+    description: '{{ item.1.description }}'
+    actions:
+    - path: '{{ item.1.executable }}'
+      arguments: '{{ item.1.arguments }}'
+  with_subelements:
+    - "{{ autoscripts | selectattr('schedule', 'defined') | list }}"
+    - schedule
+  when: item.1.enabled != false
+

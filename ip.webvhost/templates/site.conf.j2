@@ -1,0 +1,65 @@
+
+{% include 'auto_template.j2' %}
+
+{% if item.ssl is defined %}
+<VirtualHost *:{{ item.port | default('443') }}>
+{% else %}
+<VirtualHost *:{{ item.port | default('80') }}>
+{% endif %}
+	ServerAdmin {{ item.server_admin | default(webvhost_server_admin) }}
+	ServerName {{ item.server_name }}
+{% if item.document_root is defined %}
+	DocumentRoot {{ item.document_root }}
+
+{% endif %}
+{% if item.ssl is defined %}
+	SSLEngine on
+{% if item.ssl == 'acme' %}
+	SSLCertificateFile {{ webvhost_le_dirs.config }}/live/{{ item.server_name }}/fullchain.pem
+	SSLCertificateKeyFile {{ webvhost_le_dirs.config }}/live/{{ item.server_name }}/privkey.pem
+	Include {{ webvhost_le_dirs.config }}/options-ssl-apache.conf
+{% else %}
+	SSLCertificateFile {{ webvhost_ssl_path }}/{{ item.server_name }}.crt
+	SSLCertificateChainFile {{ webvhost_ssl_path }}/{{ item.server_name }}.ca.crt
+	SSLCertificateKeyFile {{ webvhost_ssl_path }}/{{ item.server_name }}.key
+{% endif %}
+{% if item.ssl.stapling is defined %}
+	SSLUseStapling on
+	SSLStaplingResponderTimeout 5
+	SSLStaplingReturnResponderErrors off
+{% endif %}
+
+{% endif %}
+{% if item.redirects is defined %}
+{% for redirect in item.redirects %}
+	Redirect {{ redirect.type }} {{ redirect.src }} {{ redirect.dest }}
+{% endfor %}
+
+{% endif %}
+{% if item.rewrites is defined %}
+	RewriteEngine On
+
+{% for rewrite in item.rewrites %}
+{% for condition in rewrite.conditions %}
+	RewriteCond {{ condition.test }} {{ condition.test_val }} {{ condition.options }}
+{% endfor %}
+	RewriteRule {{ rewrite.url }} {{ rewrite.dest }} {{ rewrite.options }}
+
+{% endfor %}
+{% endif %}
+{% if item.locations is defined %}
+{% for location in item.locations %}
+{% set tagname = 'Location' %}
+{% include 'location.conf.j2' %}
+
+{% endfor %}
+{% endif %}
+{% if item.directories is defined %}
+{% for location in item.directories %}
+{% set tagname = 'Directory' %}
+{% include 'location.conf.j2' %}
+
+{% endfor %}
+{% endif %}
+</VirtualHost>
+

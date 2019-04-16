@@ -1,0 +1,112 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Create script groups
+  group:
+    name: '{{ item.group.name }}'
+    gid: '{{ item.group.gid }}'
+    state: present
+  when: item.group.create is defined and item.group.create
+  with_items: "{{ autoscripts | selectattr('group', 'defined') | list }}"
+
+- name: Create script users
+  user:
+    name: '{{ item.user.name }}'
+    shell: '{{ item.user.shell }}'
+    uid: '{{ item.user.uid }}'
+    group: '{{ item.group.gid }}'
+    home: '{{ item.user.home }}'
+    createhome: yes
+    groups: '{{ item.user.aux_groups }}'
+  when: item.user.create is defined and item.user.create
+  with_items: "{{ autoscripts | selectattr('user', 'defined') | list }}"
+
+- name: Install apt requirements
+  package:
+    name: '{{ item.1 }}'
+    state: present
+  with_subelements:
+    - "{{ autoscripts | selectattr('pkg_requirements', 'defined') | list }}"
+    - pkg_requirements 
+
+- name: Create local scripts directories
+  file:
+    path: '{{ item.user.home }}/.autoscripts-setup'
+    state: directory
+    owner: '{{ item.user.uid }}'
+    group: '{{ item.group.gid }}'
+    mode: '0770'
+  with_items: '{{ autoscripts }}'
+
+- name: Create empty python requirements registry
+  set_fact:
+    autoscripts_pr_registry: []
+
+- name: Populate python requirements registry
+  set_fact:
+    autoscripts_pr_registry: 
+      "{{ autoscripts_pr_registry + [{ 'req': item.1, 'script': item.0 }] }}"
+  with_subelements:
+    - "{{ autoscripts | selectattr('python_requirements', 'defined') | list }}"
+    - python_requirements 
+
+- name: Check installed local python requirements
+  stat:
+    path: '{{ item.script.user.home }}/.local/lib/python2.7/site-packages/{{ item.req.name }}'
+  with_items: '{{ autoscripts_pr_registry }}'
+  register: local_python_req_stat
+
+- name: Upload local python requirements
+  synchronize:
+    src: '{{ autoscripts_root_src }}/{{ item.item.req.local_src }}/'
+    dest: '{{ item.item.script.user.home }}/.autoscripts-setup/{{ item.item.req.name }}/'
+  with_items: '{{ local_python_req_stat.results }}'
+  when:
+    - item.item.req.local
+    - not item.stat.exists
+
+- name: Install python requirements
+  pip:
+    name: 'file://{{ item.item.script.user.home }}/.autoscripts-setup/{{ item.item.req.name }}'
+    extra_args: '--user'
+  become: yes
+  become_user: '{{ item.item.script.user.name }}'
+  with_items: '{{ local_python_req_stat.results }}'
+  when:
+    - item.item.req.local
+    - not item.stat.exists
+
+- name: Copy script to host
+  copy:
+    src: '{{ autoscripts_root_src }}/{{ item.script }}'
+    dest: '{{ autoscripts_root_dest }}/{{ item.script }}'
+    mode: '0555'
+    owner: '{{ item.user.name }}'
+    group: '{{ item.group.name }}'
+  with_items: '{{ autoscripts }}'
+
+- name: Copy script config templates to host
+  template:
+    src: '{{ item.1.src }}'
+    dest: '{{ item.1.dest }}'
+    owner: '{{ item.0.user.name }}'
+    group: '{{ item.0.group.name }}'
+    mode: '0440'
+  with_subelements:
+    - "{{ autoscripts | selectattr('templates', 'defined') | list }}"
+    - templates
+
+- name: Schedule scripts to run automatically
+  cron:
+    name: '{{ item.1.name }}'
+    hour: '{{ item.1.hour }}'
+    minute: '{{ item.1.minute }}'
+    weekday: "{{ item.1.weekdays | map('extract', autoscripts_cron_dow) | list | join(',') }}"
+    user: '{{ item.1.user }}'
+    job: '{{ item.1.executable }} {{ item.1.arguments }}'
+    cron_file: 'ansible-{{ item.1.name }}'
+  with_subelements:
+    - "{{ autoscripts | selectattr('schedule', 'defined') | list }}"
+    - schedule
+  when: item.1.enabled != false
+

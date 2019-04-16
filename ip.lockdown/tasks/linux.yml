@@ -1,0 +1,82 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Install Debian GNU/Linux security packages
+  package:
+    name: '{{ item }}'
+    state: present
+  loop: '{{ lockdown_deb_pkgs }}'
+  when: ansible_distribution == 'Debian'
+
+- name: Set sane SSH config
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^{{ item.key }} '
+    insertafter: '^#{{ item.key }} '
+    line: '{{ item.key }} {{ item.value }}'
+  with_items: '{{ lockdown_sshd }}'
+
+- name: Set login banner
+  template:
+    src: templates/motd.j2
+    dest: /etc/motd
+    backup: true
+
+- name: Set issue banner
+  template:
+    src: templates/motd.j2
+    dest: /etc/issue
+    backup: true
+
+- name: Set remote issue banner
+  template:
+    src: templates/motd.j2
+    dest: /etc/issue.net
+    backup: true
+
+- name: Check if compilers exist
+  stat: { path: '/usr/bin/x86_64-linux-gnu-gcc-6' }
+  register: gcc
+
+- name: Create compiler group
+  group:
+    name: compiler
+    gid: 502
+  when: gcc.stat.exists == True
+
+- name: Lockdown gcc compiler access
+  file:
+    dest: '{{ item }}'
+    mode: 0750
+    group: compiler
+  with_fileglob: '/usr/bin/x86_64-linux-gnu-*-6'
+  when: gcc.stat.exists == True
+
+- name: Set sane sysctls
+  sysctl:
+    name: '{{ item.key }}'
+    value: '{{ item.value }}'
+    sysctl_set: yes
+    state: present
+    reload: yes
+  with_items: '{{ lockdown_sysctl_linux }}'
+    
+- name: Check if postfix config exists
+  stat: { path: '{{ lockdown_postfix_cfg }}' }
+  register: postfix_cfg
+
+- name: Set postfix SMTP banner
+  lineinfile:
+    path: '{{ lockdown_postfix_cfg }}'
+    regexp: '^smtpd_banner ='
+    insertafter: '^#smtpd_banner ='
+    line: 'smtpd_banner = $myhostname SMTP'
+  when: postfix_cfg.stat.exists == True
+  register: postfix_update
+
+- name: Restart postfix
+  service:
+    name: postfix
+    state: restarted
+  when: postfix_update.changed
+

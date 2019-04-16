@@ -1,0 +1,16 @@
+# renew_before_expiry = 30 days
+version = 0.10.2
+archive_dir = /etc/letsencrypt/archive/{{ item.server_name }}
+cert = /etc/letsencrypt/live/{{ item.server_name }}/cert.pem
+privkey = {{ webvhost_ssl_path }}/{{ item.server_name }}.key
+chain = /etc/letsencrypt/live/{{ item.server_name }}/chain.pem
+fullchain = {{ webvhost_ssl_path }}/{{ item.server_name }}.crt
+
+# Options used in the renewal process
+[renewalparams]
+authenticator = standalone
+post_hook = systemctl start apache2
+account = {{ webvhost_acme_account }}
+pre_hook = systemctl stop apache2
+installer = None
+pref_challs = {{ item.acme_challenge | default('http-01') }},
