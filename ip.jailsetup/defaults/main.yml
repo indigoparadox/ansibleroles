@@ -1,0 +1,7 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+# defaults file for ip.jailsetup
+
+jailsetup_jails_group: freebsd_jails
+jailsetup_jails_root: '/mnt/tank/jails'
+
