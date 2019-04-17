@@ -55,3 +55,15 @@
 - include_tasks: 'linux-acme.yml'
   when: acme_in_use is defined and acme_in_use
 
+- name: Determine if FreeNAS is in use
+  set_fact:
+    freenas_in_use: True
+  with_items:
+    - '{{ webvhost_sites }}'
+  when:
+    - item.ssl is defined
+    - item.ssl == 'freenas'
+
+- include_tasks: 'linux-freenas.yml'
+  when: freenas_in_use is defined and freenas_in_use
+

@@ -1,0 +1,36 @@
+
+server {
+{% if site.ssl is defined %}
+  listen {{ site.port | default('443') }}
+{% else %}
+  listen {{ site.port | default('80') }}
+{% endif %}
+  server_name {{ site.server_name | default(inventory_hostname) }};
+
+{% if site.ssl is defined %}
+  ssl on;
+{% if site.ssl == 'acme' %}
+  ssl_certificate {{ webvhost_le_dirs.config }}/live/{{ site.server_name }}/fullchain.pem;
+  ssl_certificate_key {{ webvhost_le_dirs.config }}/live/{{ site.server_name }}/privkey.pem;
+{% else %}
+  ssl_certificate {{ webvhost_ssl_path }}/{{ site.server_name | default(inventory_hostname) }}.crt;
+  ssl_certificate_key {{ webvhost_ssl_path }}/{{ site.server_name | default(inventory_hostname) }}.key;
+{% endif %}
+{% endif %}
+
+{% if site.locations is defined %}
+{% for location in site.locations %}
+{% include 'nginx-location.conf.j2' %}
+
+{% if site.redirects is defined %}
+{% for redirect in site.redirects %}
+  rewrite {{ redirect.src }} {{ redirect.dest }} {{ redirect.type }}
+{% endfor %}
+
+{% endfor %}
+{% endif %}
+
+}
+
+}
+
