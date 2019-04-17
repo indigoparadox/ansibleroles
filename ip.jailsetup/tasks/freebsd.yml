@@ -1,0 +1,32 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+#- name: Install OpenSSH
+#  pkgng:
+#    name: openssh
+#    jail: '{{ item }}'
+#  with_items: '{{ groups[jailsetup_jails_group] }}'
+
+- name: Enable OpenSSH
+  lineinfile:
+    path: '{{ jailsetup_jails_root }}/{{ hostvars[item].jail_name }}/etc/rc.conf'
+    regexp: '^sshd_enable='
+    line: 'sshd_enable="YES"'
+  register: ssh_enable
+  with_items: '{{ groups[jailsetup_jails_group] }}'
+
+- name: Install SSH key
+  lineinfile:
+    path: '{{ jailsetup_jails_root }}/{{ hostvars[item].jail_name }}/root/.ssh/authorized_keys'
+    line: '{{ jailsetup_public_key }}'
+    create: yes
+  register: ssh_key
+  with_items: '{{ groups[jailsetup_jails_group] }}'
+
+- name: Restart OpenSSH service
+  command: '/usr/sbin/jexec {{ hostvars[item.item].jail_name }} service sshd restart'
+  with_items:
+    - '{{ ssh_enable.results }}'
+    - '{{ ssh_key.results }}'
+  when: item.changed or item.changed
+
