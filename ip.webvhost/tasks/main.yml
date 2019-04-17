@@ -7,6 +7,7 @@
 - include: linux.yml
   when: ansible_os_family == 'Debian' or
         ansible_os_family == 'RedHat' or
+        ansible_os_family == 'FreeBSD' or
         ansible_os_family == 'Kali GNU/Linux'
 
 

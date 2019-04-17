@@ -1,0 +1,91 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Check whether SSL certificate exists (FreeNAS)
+  stat: { path: '{{ webvhost_ssl_path }}/{{ item.server_name }}.crt' }
+  register: ssl_crt_remote
+  when:
+    - item.ssl is defined
+    - item.ssl == 'freenas'
+  with_items: '{{ webvhost_sites }}'
+
+- name: Check SSL certificate validity
+  openssl_certificate:
+    path: '{{ webvhost_ssl_path }}/{{ item.item.server_name }}.crt'
+    provider: assertonly
+    has_expired: False
+  ignore_errors: True
+  register: ssl_valid_remote
+  when:
+    - item.item.ssl is defined
+    - item.stat.exists is defined
+    - item.stat.exists == True
+  with_items: '{{ ssl_crt_remote.results }}'
+
+- name: Check inventory for SSL certificate (FreeNAS)
+  uri:
+    url: '{{ webvhost_freenas_api_url }}/api/v1.0/system/certificate'
+    method: GET
+    user: '{{ webvhost_freenas_api_user }}'
+    password: '{{ webvhost_freenas_api_password }}'
+    body_format: json
+    force_basic_auth: yes
+  register: regen_ssl
+  when:
+    - item.item.item.ssl is defined
+    - item.item.item.ssl == 'freenas'
+    - not item.item.stat.exists or item.failed
+  with_items: '{{ ssl_valid_remote.results }}'
+
+- debug: msg=regen_ssl.results
+
+#- name: Upload new SSL certificate (FreeNAS)
+#  copy:
+#    src: '{{ webvhost_msad_ssl_tmp }}/{{ item.item.item.item.server_name }}/{{ item.item.item.item.server_name }}.crt'
+#    dest: '{{ webvhost_ssl_path }}/{{ item.item.item.item.server_name }}.crt'
+#    owner: '{{ webvhost_ssl_owner }}'
+#    group: '{{ webvhost_ssl_group }}'
+#    mode: '0660'
+#  when:
+#    - item.item.item.item.ssl is defined
+#    - item.item.item.item.ssl == 'msad'
+#    - not item.item.item.stat.exists or item.item.failed
+#  with_items: '{{ regen_ssl.results }}'
+#
+#- name: Upload new SSL private key (MSAD)
+#  copy:
+#    src: '{{ webvhost_msad_ssl_tmp }}/{{ item.item.item.item.server_name }}/{{ item.item.item.item.server_name }}.key'
+#    dest: '{{ webvhost_ssl_path }}/{{ item.item.item.item.server_name }}.key'
+#    owner: '{{ webvhost_ssl_owner }}'
+#    group: '{{ webvhost_ssl_group }}'
+#    mode: '0660'
+#  when:
+#    - item.item.item.item.ssl is defined
+#    - item.item.item.item.ssl == 'msad'
+#    - not item.item.item.stat.exists or item.item.failed
+#  with_items: '{{ regen_ssl.results }}'
+#
+##---
+#
+#- name: Check whether SSL CA chain exists (MSAD)
+#  stat: { path: '{{ webvhost_ssl_path }}/{{ item.server_name }}.ca.crt' }
+#  register: ssl_ca_crt_remote
+#  when:
+#    - item.ssl is defined
+#    - item.ssl == 'msad'
+#  with_items: '{{ webvhost_sites }}'
+#
+#- name: Upload SSL CA chain (MSAD)
+#  copy:
+#    src: '{{ webvhost_ca_crt_local }}'
+#    dest: '{{ webvhost_ssl_path }}/{{ item.item.server_name }}.ca.crt'
+#    owner: '{{ webvhost_ssl_owner }}'
+#    group: '{{ webvhost_ssl_group }}'
+#    mode: '0660'
+#  when:
+#    - item.item.ssl is defined
+#    - item.item.ssl == 'msad'
+#    - not item.stat.exists
+#  with_items: '{{ ssl_ca_crt_remote.results }}'
+
+

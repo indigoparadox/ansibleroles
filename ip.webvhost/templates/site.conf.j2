@@ -7,7 +7,7 @@
 <VirtualHost *:{{ item.port | default('80') }}>
 {% endif %}
 	ServerAdmin {{ item.server_admin | default(webvhost_server_admin) }}
-	ServerName {{ item.server_name }}
+	ServerName {{ item.server_name | default(inventory_hostname) }}
 {% if item.document_root is defined %}
 	DocumentRoot {{ item.document_root }}
 
@@ -15,13 +15,13 @@
 {% if item.ssl is defined %}
 	SSLEngine on
 {% if item.ssl == 'acme' %}
-	SSLCertificateFile {{ webvhost_le_dirs.config }}/live/{{ item.server_name }}/fullchain.pem
-	SSLCertificateKeyFile {{ webvhost_le_dirs.config }}/live/{{ item.server_name }}/privkey.pem
+	SSLCertificateFile {{ webvhost_le_dirs.config }}/live/{{ item.server_name | default(inventory_hostname) }}/fullchain.pem
+	SSLCertificateKeyFile {{ webvhost_le_dirs.config }}/live/{{ item.server_name | default(inventory_hostname) }}/privkey.pem
 	Include {{ webvhost_le_dirs.config }}/options-ssl-apache.conf
 {% else %}
-	SSLCertificateFile {{ webvhost_ssl_path }}/{{ item.server_name }}.crt
-	SSLCertificateChainFile {{ webvhost_ssl_path }}/{{ item.server_name }}.ca.crt
-	SSLCertificateKeyFile {{ webvhost_ssl_path }}/{{ item.server_name }}.key
+	SSLCertificateFile {{ webvhost_ssl_path }}/{{ item.server_name | default(inventory_hostname) }}.crt
+	SSLCertificateChainFile {{ webvhost_ssl_path }}/{{ item.server_name | default(inventory_hostname) }}.ca.crt
+	SSLCertificateKeyFile {{ webvhost_ssl_path }}/{{ item.server_name | default(inventory_hostname) }}.key
 {% endif %}
 {% if item.ssl.stapling is defined %}
 	SSLUseStapling on
