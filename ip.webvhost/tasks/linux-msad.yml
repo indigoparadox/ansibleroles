@@ -1,27 +1,6 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
-- name: Check whether SSL certificate exists (MSAD)
-  stat: { path: '{{ webvhost_ssl_path }}/{{ item.server_name }}.crt' }
-  register: ssl_crt_remote
-  when:
-    - item.ssl is defined
-    - item.ssl == 'msad'
-  with_items: '{{ webvhost_sites }}'
-
-- name: Check SSL certificate validity
-  openssl_certificate:
-    path: '{{ webvhost_ssl_path }}/{{ item.item.server_name }}.crt'
-    provider: assertonly
-    has_expired: False
-  ignore_errors: True
-  register: ssl_valid_remote
-  when:
-    - item.item.ssl is defined
-    - item.stat.exists is defined
-    - item.stat.exists == True
-  with_items: '{{ ssl_crt_remote.results }}'
-
 - name: Regenerate SSL certificate (MSAD)
   local_action: command /bin/bash ../../3rdParty/MSADCRT.sh "{{ item.item.item.server_name }}" "{{ webvhost_msad_user }}" "{{ webvhost_msad_password }}" "{{ webvhost_msad_server }}" "{{ webvhost_server_admin }}"
   register: regen_ssl

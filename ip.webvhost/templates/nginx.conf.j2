@@ -15,8 +15,10 @@ server {
 
 {% for site in webvhost_sites %}
 {% if not site.enabled is defined or site.enabled %}
+{% if not site.ssl is defined or do_ssl %}
 {% include 'nginx-server.conf.j2' %}
 
+{% endif %}
 {% endif %}
 {% endfor %}
 

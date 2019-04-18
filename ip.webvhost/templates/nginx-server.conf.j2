@@ -16,6 +16,8 @@ server {
   ssl_certificate {{ webvhost_ssl_path }}/{{ site.server_name | default(inventory_hostname) }}.crt;
   ssl_certificate_key {{ webvhost_ssl_path }}/{{ site.server_name | default(inventory_hostname) }}.key;
 {% endif %}
+  ssl_session_cache shared:SSL:1m;
+  ssl_session_timeout 5m;
 {% endif %}
 
 {% if site.locations is defined %}
