@@ -2,9 +2,9 @@
 {% include 'auto_template.j2' %}
 
 {% if item.ssl is defined %}
-<VirtualHost *:{{ item.port | default('443') }}>
+<VirtualHost {{ item.ip | default('*') }}:{{ item.port | default('443') }}>
 {% else %}
-<VirtualHost *:{{ item.port | default('80') }}>
+<VirtualHost {{ item.ip | default('*') }}:{{ item.port | default('80') }}>
 {% endif %}
 	ServerAdmin {{ item.server_admin | default(webvhost_server_admin) }}
 	ServerName {{ item.server_name | default(inventory_hostname) }}
