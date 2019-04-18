@@ -21,7 +21,7 @@
 {% else %}
 	SSLCertificateFile {{ webvhost_ssl_path }}/{{ item.server_name | default(inventory_hostname) }}.crt
 	SSLCertificateChainFile {{ webvhost_ssl_path }}/{{ item.server_name | default(inventory_hostname) }}.ca.crt
-	SSLCertificateKeyFile {{ webvhost_ssl_path }}/{{ item.server_name | default(inventory_hostname) }}.key
+	SSLCertificateKeyFile {{ webvhost_ssl_path }}/{{ item.server_name | default(inventory_hostname) }}.pem
 {% endif %}
 {% if item.ssl.stapling is defined %}
 	SSLUseStapling on

@@ -34,18 +34,25 @@
   when: item.ssl is defined
   with_items: '{{ webvhost_sites }}'
 
+- name: Check whether SSL private key exists
+  stat: 
+    path: "{{ webvhost_le_dirs.config + '/live' if item.item.ssl == 'acme' else webvhost_ssl_path }}/{{ 'privkey.pem' if item.item.ssl == 'acme' else item.item.server_name + '.pem' if item.item.server_name is defined else inventory_hostname + '.pem' }}"
+  register: ssl_key_remote
+  when: item.item.ssl is defined
+  with_items: '{{ ssl_crt_remote.results }}'
+
 - name: Check SSL certificate validity
   openssl_certificate:
-    path: "{{ webvhost_le_dirs.config + '/live' if item.ssl == 'acme' else webvhost_ssl_path }}/{{ 'fullchain.pem' if item.ssl == 'acme' else item.server_name + '.crt' if item.server_name is defined else inventory_hostname + '.crt' }}"
+    path: "{{ webvhost_le_dirs.config + '/live' if item.item.item.ssl is defined and item.item.item.ssl == 'acme' else webvhost_ssl_path }}/{{ 'fullchain.pem' if item.item.item.ssl is defined and item.item.item.ssl == 'acme' else item.item.item.server_name + '.crt' if item.item.item.server_name is defined else inventory_hostname + '.crt' }}"
     provider: assertonly
     has_expired: False
   ignore_errors: True
   register: ssl_valid_remote
   when:
-    - item.item.ssl is defined
-    - item.stat.exists is defined
-    - item.stat.exists == True
-  with_items: '{{ ssl_crt_remote.results }}'
+    - item.item.item.ssl is defined
+    - item.item.stat.exists is defined
+    - item.item.stat.exists == True
+  with_items: '{{ ssl_key_remote.results }}'
 
 # Enable non-SSL vhosts, assuming they might be needed for SSL validation.
 

@@ -13,7 +13,7 @@ server {{ '{' }}
   ssl_certificate_key {{ webvhost_le_dirs.config }}/live/{{ site.server_name }}/privkey.pem;
 {% else %}
   ssl_certificate {{ webvhost_ssl_path }}/{{ site.server_name | default(inventory_hostname) }}.crt;
-  ssl_certificate_key {{ webvhost_ssl_path }}/{{ site.server_name | default(inventory_hostname) }}.key;
+  ssl_certificate_key {{ webvhost_ssl_path }}/{{ site.server_name | default(inventory_hostname) }}.pem;
 {% endif %}
   ssl_session_cache shared:SSL:1m;
   ssl_session_timeout {{ item.ssl_timeout | default webvhost_ssl_timeout }};

@@ -2,7 +2,7 @@
 version = 0.10.2
 archive_dir = /etc/letsencrypt/archive/{{ item.server_name }}
 cert = /etc/letsencrypt/live/{{ item.server_name }}/cert.pem
-privkey = {{ webvhost_ssl_path }}/{{ item.server_name }}.key
+privkey = /etc/letsencrypt/live/{{ item.server_name }}/privkey.pem
 chain = /etc/letsencrypt/live/{{ item.server_name }}/chain.pem
 fullchain = {{ webvhost_ssl_path }}/{{ item.server_name }}.crt
 
