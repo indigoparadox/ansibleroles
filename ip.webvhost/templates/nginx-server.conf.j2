@@ -1,8 +1,8 @@
 server {{ '{' }}
 {% if site.ssl is defined %}
-  listen {{ site.port | default('443') }};
+  listen {% item.ip + ':' if item.ip is defined %}{{ site.port | default('443') }};
 {% else %}
-  listen {{ site.port | default('80') }};
+  listen {% item.ip + ':' if item.ip is defined %}{{ site.port | default('80') }};
 {% endif %}
   server_name {{ site.server_name | default(inventory_hostname) }};
 
@@ -16,7 +16,11 @@ server {{ '{' }}
   ssl_certificate_key {{ webvhost_ssl_path }}/{{ site.server_name | default(inventory_hostname) }}.key;
 {% endif %}
   ssl_session_cache shared:SSL:1m;
-  ssl_session_timeout 5m;
+  ssl_session_timeout {{ item.ssl_timeout | default webvhost_ssl_timeout }};
+
+{% endif %}
+{% if site.document_root is defined %}
+  root {{ site.document_root }};
 
 {% endif %}
 {% if site.locations is defined %}
@@ -24,12 +28,6 @@ server {{ '{' }}
 {% include 'nginx-location.conf.j2' %}
 
 {% endfor %}
-{% endif %}
-{% if site.redirects is defined %}
-{% for redirect in site.redirects %}
-  rewrite {{ redirect.src }} {{ redirect.dest }} {{ redirect.type }};
-{% endfor %}
-
 {% endif %}
 {{ '}' }}
 

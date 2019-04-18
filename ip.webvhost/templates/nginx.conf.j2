@@ -2,16 +2,10 @@
 {% include 'auto_template.j2' %}
 
 events {{ '{' }}
-  worker_connections  '{{ webvhost_nginx_worker_connections }}';
+  worker_connections  {{ webvhost_nginx_worker_connections }};
 {{ '}' }}
 
 http {{ '{' }}
-
-#server {
-#  listen   80;
-#  server_name torrents.interfinitydynamics.info;
-#  rewrite ^(.*) https://torrents.interfinitydynamics.info$1 permanent;
-#}
 
 {% for site in webvhost_sites %}
 {% if not site.enabled is defined or site.enabled %}
@@ -23,5 +17,4 @@ http {{ '{' }}
 {% endfor %}
 
 {{ '}' }}
-
 
