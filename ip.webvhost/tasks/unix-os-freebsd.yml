@@ -1,0 +1,22 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Ensure necessary packages present (FreeBSD)
+  pkgng:
+    name:
+    - py27-openssl
+    - "{{ 'apache24' if webvhost_engine == 'apache' else 'nginx' }}"
+    state: present
+  ignore_errors: True
+  when: ansible_os_family == 'FreeBSD'
+
+- name: Ensure PHP packages present (FreeBSD)
+  pkgng:
+    name:
+    - php72
+    - slowcgi
+    state: present
+  when:
+  - ansible_os_family == 'FreeBSD'
+  - php_in_use is defined and php_in_use
+

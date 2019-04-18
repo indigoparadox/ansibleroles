@@ -1,38 +1,31 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
+# Gather some facts, first.
+
+- name: Create features list.
+  set_fact:
+    webvhost_features: {}
+  no_log: true
+
 - name: Determine if PHP is in use
   set_fact:
-    php_in_use: True
+    webvhost_features: "{{ webvhost_features | combine({ 'php': true }) }}"
   with_items:
     - '{{ webvhost_sites }}'
   when: not item.php is defined or item.php
+  no_log: true
 
 - name: Determine if SSL is in use
   set_fact:
-    ssl_in_use: True
+    webvhost_features: "{{ webvhost_features | combine({ 'ssl': true, item.ssl: true }) }}"
   with_items:
     - '{{ webvhost_sites }}'
   when: item.ssl is defined
+  no_log: true
 
-- name: Ensure necessary packages present (FreeBSD)
-  pkgng:
-    name:
-    - py27-openssl
-    - "{{ 'apache24' if webvhost_engine == 'apache' else 'nginx' }}"
-    state: present
-  ignore_errors: True
+- include_tasks: unix-os-freebsd.yml
   when: ansible_os_family == 'FreeBSD'
-
-- name: Ensure PHP packages present (FreeBSD)
-  pkgng:
-    name:
-    - php72
-    - slowcgi
-    state: present
-  when:
-  - ansible_os_family == 'FreeBSD'
-  - php_in_use is defined and php_in_use
 
 - name: Check whether SSL certificate exists
   stat: 
@@ -54,19 +47,21 @@
     - item.stat.exists == True
   with_items: '{{ ssl_crt_remote.results }}'
 
-- name: Upload apache config snippets
-  template:
-    src: 'templates/conf.conf.j2'
-    dest: '/etc/apache2/conf-available/{{ item.name }}.conf'
-    backup: True
-  with_items: '{{ webvhost_conf }}'
-  when: webvhost_engine == 'apache'
-
 # Enable non-SSL vhosts, assuming they might be needed for SSL validation.
-- include: 'linux-apache.yml'
+
+- include: 'unix-engine-apache.yml'
   vars:
     do_ssl: False
   when: webvhost_engine == 'apache'
+
+# TODO: Only include these if something changed, otherwise it overwrites SSL
+#       config below and causes unneccesary restarts.
+- include: 'unix-engine-nginx.yml'
+  vars:
+    do_ssl: False
+  when: webvhost_engine == 'nginx'
+
+# Perform common tasks.
 
 - name: Ensure document root exists
   file:
@@ -78,45 +73,26 @@
     - not item.enabled is defined or item.enabled == True
   with_items: "{{ webvhost_sites | selectattr('document_root', 'defined') | list }}"
 
+# Request SSL certificates.
+
+- include_tasks: 'unix-ssl-msad.yml'
+  when: webvhost_features.msad is defined and webvhost_features.msad
+
+- include_tasks: 'unix-ssl-acme.yml'
+  when: webvhost_features.acme is defined and webvhost_features.acme
+
+- include_tasks: 'unix-ssl-freenas.yml'
+  when: webvhost_features.freenas is defined and webvhost_features.freenas
+
 # Enable SSL-enabled vhosts, now that they should have certificates.
-- include: 'linux-apache.yml'
+
+- include: 'unix-engine-apache.yml'
   vars:
     do_ssl: True
   when: webvhost_engine == 'apache'
 
-- name: Determine if MSAD is in use
-  set_fact:
-    msad_in_use: True
-  with_items:
-    - '{{ webvhost_sites }}'
-  when:
-    - item.ssl is defined
-    - item.ssl == 'msad'
-
-- include_tasks: 'linux-msad.yml'
-  when: msad_in_use is defined and msad_in_use
-
-- name: Determine if ACME is in use
-  set_fact:
-    acme_in_use: True
-  with_items:
-    - '{{ webvhost_sites }}'
-  when:
-    - item.ssl is defined
-    - item.ssl == 'acme'
-
-- include_tasks: 'linux-acme.yml'
-  when: acme_in_use is defined and acme_in_use
-
-- name: Determine if FreeNAS is in use
-  set_fact:
-    freenas_in_use: True
-  with_items:
-    - '{{ webvhost_sites }}'
-  when:
-    - item.ssl is defined
-    - item.ssl == 'freenas'
-
-- include_tasks: 'linux-freenas.yml'
-  when: freenas_in_use is defined and freenas_in_use
+- include: 'unix-engine-nginx.yml'
+  vars:
+    do_ssl: True
+  when: webvhost_engine == 'nginx'
 
