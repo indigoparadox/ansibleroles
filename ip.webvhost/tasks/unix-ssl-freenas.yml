@@ -30,7 +30,7 @@
 
 - name: Upload existing SSL private key (FreeNAS)
   copy:
-    dest: '{{ webvhost_ssl_path }}/{{ item.0.server_name | default(inventory_hostname) }}.key'
+    dest: '{{ webvhost_ssl_path }}/{{ item.0.server_name | default(inventory_hostname) }}.pem'
     content: >
       {{ item.1.cert_privatekey }}
   when: 
