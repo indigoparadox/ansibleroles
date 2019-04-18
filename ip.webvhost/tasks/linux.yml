@@ -1,6 +1,59 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
+- name: Determine if PHP is in use
+  set_fact:
+    php_in_use: True
+  with_items:
+    - '{{ webvhost_sites }}'
+  when: not item.php is defined or item.php
+
+- name: Determine if SSL is in use
+  set_fact:
+    ssl_in_use: True
+  with_items:
+    - '{{ webvhost_sites }}'
+  when: item.ssl is defined
+
+- name: Ensure necessary packages present (FreeBSD)
+  pkgng:
+    name:
+    - py27-openssl
+    - "{{ 'apache24' if webvhost_engine == 'apache' else 'nginx' }}"
+    state: present
+  ignore_errors: True
+  when: ansible_os_family == 'FreeBSD'
+
+- name: Ensure PHP packages present (FreeBSD)
+  pkgng:
+    name:
+    - php72
+    - slowcgi
+    state: present
+  when:
+  - ansible_os_family == 'FreeBSD'
+  - php_in_use is defined and php_in_use
+
+- name: Check whether SSL certificate exists
+  stat: 
+    path: "{{ webvhost_le_dirs.config + '/live' if item.ssl == 'acme' else webvhost_ssl_path }}/{{ 'fullchain.pem' if item.ssl == 'acme' else item.server_name + '.crt' if item.server_name is defined else inventory_hostname + '.crt' }}"
+  register: ssl_crt_remote
+  when: item.ssl is defined
+  with_items: '{{ webvhost_sites }}'
+
+- name: Check SSL certificate validity
+  openssl_certificate:
+    path: "{{ webvhost_le_dirs.config + '/live' if item.ssl == 'acme' else webvhost_ssl_path }}/{{ 'fullchain.pem' if item.ssl == 'acme' else item.server_name + '.crt' if item.server_name is defined else inventory_hostname + '.crt' }}"
+    provider: assertonly
+    has_expired: False
+  ignore_errors: True
+  register: ssl_valid_remote
+  when:
+    - item.item.ssl is defined
+    - item.stat.exists is defined
+    - item.stat.exists == True
+  with_items: '{{ ssl_crt_remote.results }}'
+
 - name: Upload apache config snippets
   template:
     src: 'templates/conf.conf.j2'

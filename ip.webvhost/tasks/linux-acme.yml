@@ -1,28 +1,6 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
-- name: Check whether SSL certificate exists
-  stat: { path: '{{ webvhost_le_dirs.config }}/live/{{ item.server_name }}/fullchain.pem' }
-  register: ssl_crt_remote
-  when:
-    - item.ssl is defined
-  with_items: '{{ webvhost_sites }}'
-
-- name: Check SSL certificate validity
-  openssl_certificate:
-    path: '{{ webvhost_le_dirs.config }}/live/{{ item.item.server_name }}/fullchain.pem'
-    provider: assertonly
-    has_expired: False
-  ignore_errors: True
-  register: ssl_valid_remote
-  when:
-    - item.item.ssl is defined
-    - item.stat is defined
-    - item.stat.exists == True
-  with_items: '{{ ssl_crt_remote.results }}'
-
-#---
-
 - name: Install certbot ACME client
   package:
     name: certbot

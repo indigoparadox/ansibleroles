@@ -1,28 +1,7 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
-- name: Check whether SSL certificate exists (FreeNAS)
-  stat: { path: '{{ webvhost_ssl_path }}/{{ item.server_name }}.crt' }
-  register: ssl_crt_remote
-  when:
-    - item.ssl is defined
-    - item.ssl == 'freenas'
-  with_items: '{{ webvhost_sites }}'
-
-- name: Check SSL certificate validity
-  openssl_certificate:
-    path: '{{ webvhost_ssl_path }}/{{ item.item.server_name }}.crt'
-    provider: assertonly
-    has_expired: False
-  ignore_errors: True
-  register: ssl_valid_remote
-  when:
-    - item.item.ssl is defined
-    - item.stat.exists is defined
-    - item.stat.exists == True
-  with_items: '{{ ssl_crt_remote.results }}'
-
-- name: Check inventory for SSL certificate (FreeNAS)
+- name: Fetch SSL certificate inventory (FreeNAS)
   uri:
     url: '{{ webvhost_freenas_api_url }}/api/v1.0/system/certificate'
     method: GET
@@ -30,14 +9,23 @@
     password: '{{ webvhost_freenas_api_password }}'
     body_format: json
     force_basic_auth: yes
-  register: regen_ssl
-  when:
-    - item.item.item.ssl is defined
-    - item.item.item.ssl == 'freenas'
-    - not item.item.stat.exists or item.failed
-  with_items: '{{ ssl_valid_remote.results }}'
+    validate_certs: False
+  delegate_to: localhost
+  register: ssl_inventory
 
-- debug: msg=regen_ssl.results
+- name: Upload existing SSL certificate (FreeNAS)
+  copy:
+    dest: '{{ webvhost_ssl_path }}/{{ item.0.server_name | default(inventory_hostname) }}.crt'
+    content: >
+      {{ item.1.cert_certificate }}{{ webvhost_freenas_ca }}
+  when: 
+  - (not item.0.server_name is defined and 
+    inventory_hostname == item.1.cert_common) or
+    (item.0.server_name is defined and
+    item.0.server_name == item.1.cert_common)
+  with_nested:
+  - '{{ webvhost_sites }}'
+  - '{{ ssl_inventory.json }}'
 
 #- name: Upload new SSL certificate (FreeNAS)
 #  copy:
