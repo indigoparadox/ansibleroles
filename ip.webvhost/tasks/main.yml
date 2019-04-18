@@ -4,7 +4,7 @@
 
 - include: dns.yml
 
-- include: linux.yml
+- include: unix.yml
   when: ansible_os_family == 'Debian' or
         ansible_os_family == 'RedHat' or
         ansible_os_family == 'FreeBSD' or

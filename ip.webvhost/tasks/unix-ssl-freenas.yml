@@ -12,6 +12,7 @@
     validate_certs: False
   delegate_to: localhost
   register: ssl_inventory
+  no_log: true
 
 - name: Upload existing SSL certificate (FreeNAS)
   copy:
@@ -27,53 +28,17 @@
   - '{{ webvhost_sites }}'
   - '{{ ssl_inventory.json }}'
 
-#- name: Upload new SSL certificate (FreeNAS)
-#  copy:
-#    src: '{{ webvhost_msad_ssl_tmp }}/{{ item.item.item.item.server_name }}/{{ item.item.item.item.server_name }}.crt'
-#    dest: '{{ webvhost_ssl_path }}/{{ item.item.item.item.server_name }}.crt'
-#    owner: '{{ webvhost_ssl_owner }}'
-#    group: '{{ webvhost_ssl_group }}'
-#    mode: '0660'
-#  when:
-#    - item.item.item.item.ssl is defined
-#    - item.item.item.item.ssl == 'msad'
-#    - not item.item.item.stat.exists or item.item.failed
-#  with_items: '{{ regen_ssl.results }}'
-#
-#- name: Upload new SSL private key (MSAD)
-#  copy:
-#    src: '{{ webvhost_msad_ssl_tmp }}/{{ item.item.item.item.server_name }}/{{ item.item.item.item.server_name }}.key'
-#    dest: '{{ webvhost_ssl_path }}/{{ item.item.item.item.server_name }}.key'
-#    owner: '{{ webvhost_ssl_owner }}'
-#    group: '{{ webvhost_ssl_group }}'
-#    mode: '0660'
-#  when:
-#    - item.item.item.item.ssl is defined
-#    - item.item.item.item.ssl == 'msad'
-#    - not item.item.item.stat.exists or item.item.failed
-#  with_items: '{{ regen_ssl.results }}'
-#
-##---
-#
-#- name: Check whether SSL CA chain exists (MSAD)
-#  stat: { path: '{{ webvhost_ssl_path }}/{{ item.server_name }}.ca.crt' }
-#  register: ssl_ca_crt_remote
-#  when:
-#    - item.ssl is defined
-#    - item.ssl == 'msad'
-#  with_items: '{{ webvhost_sites }}'
-#
-#- name: Upload SSL CA chain (MSAD)
-#  copy:
-#    src: '{{ webvhost_ca_crt_local }}'
-#    dest: '{{ webvhost_ssl_path }}/{{ item.item.server_name }}.ca.crt'
-#    owner: '{{ webvhost_ssl_owner }}'
-#    group: '{{ webvhost_ssl_group }}'
-#    mode: '0660'
-#  when:
-#    - item.item.ssl is defined
-#    - item.item.ssl == 'msad'
-#    - not item.stat.exists
-#  with_items: '{{ ssl_ca_crt_remote.results }}'
-
+- name: Upload existing SSL private key (FreeNAS)
+  copy:
+    dest: '{{ webvhost_ssl_path }}/{{ item.0.server_name | default(inventory_hostname) }}.key'
+    content: >
+      {{ item.1.cert_privatekey }}
+  when: 
+  - (not item.0.server_name is defined and 
+    inventory_hostname == item.1.cert_common) or
+    (item.0.server_name is defined and
+    item.0.server_name == item.1.cert_common)
+  with_nested:
+  - '{{ webvhost_sites }}'
+  - '{{ ssl_inventory.json }}'
 
