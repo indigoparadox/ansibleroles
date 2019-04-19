@@ -1,2 +1,30 @@
 ---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 # defaults file for ip.getcert
+
+getcert_freenas_api_user: root
+getcert_ssl_path: '/etc/ssl'
+getcert_msad_ssl_tmp: '/tmp/msadcrt'
+getcert_msad_ssl_headers:
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+  Accept-Language: 'en-US,en;q=0.5'
+  Connection: 'keep-alive'
+  Host: '{{ getcert_msad_server }}'
+  Referer: 'https://{{ getcert_msad_server }}/certsrv/certrqxt.asp'
+  User-Agent: 'Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko'
+  Content-Type: 'application/x-www-form-urlencoded'
+getcert_le_user:
+  name: letsencrypt
+  uid: 559
+  group: letsencrypt
+  gid: 559
+  shell: '/bin/bash'
+  home: '/var/lib/letsencrypt'
+  groups: ['www-data']
+getcert_ssl_owner: www-data
+getcert_ssl_group: www-data
+getcert_le_dirs:
+  work: '{{ getcert_le_user.home }}/work'
+  config: '/etc/letsencrypt'
+  logs: '{{ getcert_le_user.home }}/logs'
+

@@ -3,10 +3,10 @@
 
 - name: Fetch SSL certificate inventory (FreeNAS)
   uri:
-    url: '{{ webvhost_freenas_api_url }}/api/v1.0/system/certificate'
+    url: '{{ getcert_freenas_api_url }}/api/v1.0/system/certificate'
     method: GET
-    user: '{{ webvhost_freenas_api_user }}'
-    password: '{{ webvhost_freenas_api_password }}'
+    user: '{{ getcert_freenas_api_user }}'
+    password: '{{ getcert_freenas_api_password }}'
     body_format: json
     force_basic_auth: yes
     validate_certs: False
@@ -16,29 +16,19 @@
 
 - name: Upload existing SSL certificate (FreeNAS)
   copy:
-    dest: '{{ webvhost_ssl_path }}/{{ item.0.server_name | default(inventory_hostname) }}.crt'
+    dest: '{{ cert_path }}'
     content: >
-      {{ item.1.cert_certificate }}{{ webvhost_freenas_ca }}
-  when: 
-  - (not item.0.server_name is defined and 
-    inventory_hostname == item.1.cert_common) or
-    (item.0.server_name is defined and
-    item.0.server_name == item.1.cert_common)
-  with_nested:
-  - '{{ webvhost_sites }}'
+      {{ item.cert_certificate }}{{ getcert_freenas_ca }}
+  when: common_name == item.cert_common
+  with_items:
   - '{{ ssl_inventory.json }}'
 
 - name: Upload existing SSL private key (FreeNAS)
   copy:
-    dest: '{{ webvhost_ssl_path }}/{{ item.0.server_name | default(inventory_hostname) }}.pem'
+    dest: '{{ privkey_path }}'
     content: >
-      {{ item.1.cert_privatekey }}
-  when: 
-  - (not item.0.server_name is defined and 
-    inventory_hostname == item.1.cert_common) or
-    (item.0.server_name is defined and
-    item.0.server_name == item.1.cert_common)
-  with_nested:
-  - '{{ webvhost_sites }}'
+      {{ item.cert_privatekey }}
+  when:  common_name == item.cert_common
+  with_items:
   - '{{ ssl_inventory.json }}'
 

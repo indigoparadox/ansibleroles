@@ -1,103 +1,56 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
-#- name: Regenerate SSL certificate (MSAD)
-#  local_action: command /bin/bash ../../3rdParty/MSADCRT.sh "{{ item.item.item.server_name }}" "{{ webvhost_msad_user }}" "{{ webvhost_msad_password }}" "{{ webvhost_msad_server }}" "{{ webvhost_server_admin }}"
-#  register: regen_ssl
-#  when:
-#    - item.item.item.ssl is defined
-#    - item.item.item.ssl == 'msad'
-#    - not item.item.stat.exists or item.failed
-#  with_items: '{{ ssl_valid_remote.results }}'
+- include_tasks: 'unix-ssl-all.yml'
 
 - name: Generate SSL private key (MSAD)
   openssl_privatekey:
-    path: '{{ webvhost_ssl_path }}/{{ item.item.item.item.server_name }}.pem'
+    path: '{{ privkey_path }}'
     size: 4096
     state: present
     type: RSA
-    owner: '{{ webvhost_ssl_owner }}'
-    group: '{{ webvhost_ssl_group }}'
-  with_items: '{{ ssl_valid_remote.results }}'
-  when:
-    - item.item.item.item.ssl is defined
-    - item.item.item.item.ssl == 'msad'
-    - not item.item.stat.exists
+    owner: '{{ getcert_ssl_owner }}'
+    group: '{{ getcert_ssl_group }}'
+  register: msad_privkey
+  when: not ssl_key_remote.stat.exists
 
 - name: Generate SSL signing request (MSAD)
   openssl_csr:
-    path: '{{ webvhost_ssl_path }}/{{ item.item.item.item.server_name | default(inventory_hostname) }}.csr'
-    privatekey_path: '{{ webvhost_ssl_path }}/{{ item.item.item.item.server_name | default(inventory_hostname) }}.pem'
-    common_name: '{{ item.item.item.item.server_name | default(inventory_hostname) }}'
-    organization_name: '{{ webvhost_csr_org }}'
-    locality_name: '{{ webvhost_csr_locale }}'
-    state_or_province_name: '{{ webvhost_csr_state }}'
-    country_name: '{{ webvhost_csr_country }}'
-    email_address: '{{ webvhost_server_admin }}'
+    path: '{{ csr_path }}'
+    privatekey_path: '{{ privkey_path }}'
+    common_name: '{{ common_name }}'
+    organization_name: '{{ getcert_csr_org }}'
+    locality_name: '{{ getcert_csr_locale }}'
+    state_or_province_name: '{{ getcert_csr_state }}'
+    country_name: '{{ getcert_csr_country }}'
+    email_address: '{{ getcert_csr_contact }}'
     digest: sha256
-    owner: '{{ webvhost_ssl_owner }}'
-    group: '{{ webvhost_ssl_group }}'
+    owner: '{{ getcert_ssl_owner }}'
+    group: '{{ getcert_ssl_group }}'
     subject_alt_name:
-      - 'DNS:{{ item.item.item.item.server_name | default(inventory_hostname) }}'
+      - 'DNS:{{ common_name }}'
   register: msad_csr
-  with_items: '{{ ssl_valid_remote.results }}'
-  when:
-    - item.item.item.item.ssl is defined
-    - item.item.item.item.ssl == 'msad'
-    - item.item.changed or 
-      not item.item.item.stat.exists or
-      item.item.item.failed
+  when: not ssl_crt_remote.stat.exists or ssl_valid_remote.failed
 
 - name: Submit certificate signing request (MSAD)
   uri:
-    url: 'https://{{ webvhost_msad_server }}/certsrv/certfnsh.asp'
-    user: '{{ webvhost_msad_user }}'
-    password: '{{ webvhost_msad_password }}'
+    url: 'https://{{ getcert_msad_server }}/certsrv/certfnsh.asp'
+    user: '{{ getcert_msad_user }}'
+    password: '{{ getcert_msad_password }}'
     force_basic_auth: yes
-    headers: '{{ webvhost_msad_ssl_headers }}'
-    body: "Mode=newreq&CertRequest={{ lookup('file', item.filename) | regex_replace('\\r|\\n', '') | regex_replace( '\\+', '%2B' ) | regex_replace( ' ', '+' ) }}&CertAttrib=CertificateTemplate:{{ webvhost_msad_template }}%0D%0A&TargetStoreFlags=0&SaveCert=yes&ThumbPrint="
+    headers: '{{ getcert_msad_ssl_headers }}'
+    body: "Mode=newreq&CertRequest={{ lookup('file', msad_csr.filename) | regex_replace('\\r|\\n', '') | regex_replace( '\\+', '%2B' ) | regex_replace( ' ', '+' ) }}&CertAttrib=CertificateTemplate:{{ getcert_msad_template }}%0D%0A&TargetStoreFlags=0&SaveCert=yes&ThumbPrint="
     return_content: yes
   register: msad_certrqxt
-  with_items: '{{ msad_csr.results }}'
-  when:
-    - item.item.item.item.item.ssl is defined
-    - item.item.item.item.item.ssl == 'msad'
-    - item.changed or
-      item.item.item.item.failed or
-      not item.item.item.item.stat.exists
+  when: msad_csr.changed or not ssl_crt_remote.stat.exists
 
 - name: Download issued certificate (MSAD)
   uri:
-    url: "https://{{ webvhost_msad_server }}/certsrv/{{ item.content | regex_search('(certnew\\.cer\\?ReqID=[0-9]*)&') }}"
-    user: '{{ webvhost_msad_user }}'
-    password: '{{ webvhost_msad_password }}'
+    url: "https://{{ getcert_msad_server }}/certsrv/{{ msad_certrqxt.content | regex_search('(certnew\\.cer\\?ReqID=[0-9]*)&') }}"
+    user: '{{ getcert_msad_user }}'
+    password: '{{ getcert_msad_password }}'
     force_basic_auth: yes
-    headers: '{{ webvhost_msad_ssl_headers }}'
-    dest: '{{ webvhost_ssl_path }}/{{ item.item.item.item.item.item.server_name | default(inventory_hostname) }}.crt'
-  with_items: '{{ msad_certrqxt.results }}'
-  when:
-    - item.content is defined
-    - item.item.item.item.item.item.ssl is defined
-    - item.item.item.item.item.item.ssl == 'msad'
-
-- name: Check whether SSL CA chain exists (MSAD)
-  stat: { path: '{{ webvhost_ssl_path }}/{{ item.server_name | default(inventory_hostname) }}.ca.crt' }
-  register: ssl_ca_crt_remote
-  when:
-    - item.ssl is defined
-    - item.ssl == 'msad'
-  with_items: '{{ webvhost_sites }}'
-
-- name: Upload SSL CA chain (MSAD)
-  copy:
-    src: '{{ webvhost_ca_crt_local }}'
-    dest: '{{ webvhost_ssl_path }}/{{ item.item.server_name | default(inventory_hostname) }}.ca.crt'
-    owner: '{{ webvhost_ssl_owner }}'
-    group: '{{ webvhost_ssl_group }}'
-    mode: '0660'
-  when:
-    - item.item.ssl is defined
-    - item.item.ssl == 'msad'
-    - not item.stat.exists
-  with_items: '{{ ssl_ca_crt_remote.results }}'
+    headers: '{{ getcert_msad_ssl_headers }}'
+    dest: '{{ cert_path }}'
+  when: msad_csr.changed or not ssl_crt_remote.stat.exists
 

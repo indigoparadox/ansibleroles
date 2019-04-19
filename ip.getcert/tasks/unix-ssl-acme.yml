@@ -8,50 +8,50 @@
 
 - name: Create ACME group
   group:
-    name: '{{ webvhost_le_user.group }}'
-    gid: '{{ webvhost_le_user.gid }}'
+    name: '{{ getcert_le_user.group }}'
+    gid: '{{ getcert_le_user.gid }}'
     state: present
 
 - name: Create ACME user
   user:
-    name: '{{ webvhost_le_user.name }}'
-    shell: '{{ webvhost_le_user.shell }}'
-    uid: '{{ webvhost_le_user.uid }}'
-    group: '{{ webvhost_le_user.group }}'
-    home: '{{ webvhost_le_user.home }}'
+    name: '{{ getcert_le_user.name }}'
+    shell: '{{ getcert_le_user.shell }}'
+    uid: '{{ getcert_le_user.uid }}'
+    group: '{{ getcert_le_user.group }}'
+    home: '{{ getcert_le_user.home }}'
     createhome: yes
-    groups: '{{ webvhost_le_user.groups }}'
+    groups: '{{ getcert_le_user.groups }}'
 
 - name: Create ACME directories
   file:
     path: '{{ item.value }}'
     state: directory
-    owner: '{{ webvhost_le_user.name }}'
-    group: '{{ webvhost_le_user.group }}'
-  with_dict: '{{ webvhost_le_dirs }}'
+    owner: '{{ getcert_le_user.name }}'
+    group: '{{ getcert_le_user.group }}'
+  with_dict: '{{ getcert_le_dirs }}'
 
 - name: Verify ACME working directory permissions
-  #command: 'chown -R {{ webvhost_le_user.name }}:{{ webvhost_le_user.group }} {{ webvhost_le_dirs.work }}'
+  #command: 'chown -R {{ getcert_le_user.name }}:{{ getcert_le_user.group }} {{ getcert_le_dirs.work }}'
   file:
-    path: '{{ webvhost_le_dirs.work }}'
-    owner: '{{ webvhost_le_user.name }}'
-    group: '{{ webvhost_le_user.group }}'
+    path: '{{ getcert_le_dirs.work }}'
+    owner: '{{ getcert_le_user.name }}'
+    group: '{{ getcert_le_user.group }}'
     recurse: yes
 
 - name: Create ACME site directories
   file:
     path: '{{ item.document_root }}/.well-known'
     state: directory
-    owner: '{{ webvhost_le_user.name }}'
-    group: '{{ webvhost_le_user.group }}'
+    owner: '{{ getcert_le_user.name }}'
+    group: '{{ getcert_le_user.group }}'
     mode: 0775
   when:
     - item.ssl is defined
     - item.ssl == 'acme'
-  with_items: '{{ webvhost_sites }}'
+  with_items: '{{ getcert_sites }}'
 
 - name: Generate SSL certificate (ACME)
-  command: 'certbot certonly --agree-tos -m {{ item.item.item.le_mail | default(webvhost_le_mail) }} --config-dir {{ webvhost_le_dirs.config }} --logs-dir {{ webvhost_le_dirs.logs }} --work-dir {{ webvhost_le_dirs.work }} --webroot -w {{ item.item.item.document_root }} -d {{ item.item.item.server_name }}'
+  command: 'certbot certonly --agree-tos -m {{ item.item.item.le_mail | default(getcert_le_mail) }} --config-dir {{ getcert_le_dirs.config }} --logs-dir {{ getcert_le_dirs.logs }} --work-dir {{ getcert_le_dirs.work }} --webroot -w {{ item.item.item.document_root }} -d {{ item.item.item.server_name }}'
   when:
     - not item.item.item.enabled is defined or item.item.item.enabled == True
     - item.item.item.ssl is defined
@@ -59,11 +59,11 @@
     - not item.item.stat.exists
     - not item.failed
   become: yes
-  become_user: '{{ webvhost_le_user.name }}'
+  become_user: '{{ getcert_le_user.name }}'
   with_items: '{{ ssl_valid_remote.results }}'
 
 - name: Renew SSL certificate (ACME)
-  command: 'certbot renew --agree-tos -m {{ item.item.item.le_mail | default(webvhost_le_mail) }} --config-dir {{ webvhost_le_dirs.config }} --logs-dir {{ webvhost_le_dirs.logs }} --work-dir {{ webvhost_le_dirs.work }} --webroot -w {{ item.item.item.document_root }} -d {{ item.item.item.server_name }}'
+  command: 'certbot renew --agree-tos -m {{ item.item.item.le_mail | default(getcert_le_mail) }} --config-dir {{ getcert_le_dirs.config }} --logs-dir {{ getcert_le_dirs.logs }} --work-dir {{ getcert_le_dirs.work }} --webroot -w {{ item.item.item.document_root }} -d {{ item.item.item.server_name }}'
   when:
     - not item.item.item.enabled is defined or item.item.item.enabled == True
     - item.item.item.ssl is defined
@@ -71,13 +71,13 @@
     - item.item.stat.exists
     - item.failed
   become: yes
-  become_user: '{{ webvhost_le_user.name }}'
+  become_user: '{{ getcert_le_user.name }}'
   with_items: '{{ ssl_valid_remote.results }}'
 
 #- name: Upload certbot config (ACME)
 #  template:
 #    src: 'templates/acme-renewal.conf.j2'
-#    dest: '{{ webvhost_certbot_config_dir }}/renewal/{{ item.server_name }}.conf'
+#    dest: '{{ getcert_certbot_config_dir }}/renewal/{{ item.server_name }}.conf'
 #    owner: 'root'
 #    group: 'root'
 #    mode: '0644'
@@ -86,5 +86,5 @@
 #      (not item.item.item.enabled is defined)
 #    - item.item.ssl is defined
 #    - item.item.ssl == 'acme'
-#  with_items: '{{ webvhost_sites }}'
+#  with_items: '{{ getcert_sites }}'
 
