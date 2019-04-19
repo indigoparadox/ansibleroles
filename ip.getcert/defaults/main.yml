@@ -13,14 +13,6 @@ getcert_msad_ssl_headers:
   Referer: 'https://{{ getcert_msad_server }}/certsrv/certrqxt.asp'
   User-Agent: 'Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko'
   Content-Type: 'application/x-www-form-urlencoded'
-getcert_le_user:
-  name: letsencrypt
-  uid: 559
-  group: letsencrypt
-  gid: 559
-  shell: '/bin/bash'
-  home: '/var/lib/letsencrypt'
-  groups: ['www-data']
 getcert_ssl_owner: www-data
 getcert_ssl_group: www-data
 getcert_le_dirs:

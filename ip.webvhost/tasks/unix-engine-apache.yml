@@ -8,6 +8,7 @@
     src: 'templates/conf.conf.j2'
     dest: '/etc/apache2/conf-available/{{ item.name }}.conf'
     backup: True
+  register: conf_upload
   with_items: '{{ webvhost_conf }}'
   when:
     - webvhost_engine == 'apache'
@@ -42,7 +43,7 @@
 - name: Check whether SSL vhost is enabled
   stat:
     path: '/etc/apache2/sites-enabled/{{ item.name }}.conf'
-  register: sites_enabled
+  register: ssl_sites_enabled
   with_items: "{{ webvhost_sites | selectattr('ssl', 'defined') | list }}"
   when:
     - not item.enabled is defined or item.enabled == True
@@ -51,7 +52,7 @@
 - name: Check whether non-SSL vhost is enabled
   stat:
     path: '/etc/apache2/sites-enabled/{{ item.name }}.conf'
-  register: sites_enabled
+  register: ptx_sites_enabled
   with_items: "{{ webvhost_sites | rejectattr('ssl', 'defined') | list }}"
   when:
     - not do_ssl is defined or not do_ssl
@@ -63,9 +64,10 @@
   command: 'a2ensite {{ item.item.name }}'
   when:
     - not item.item.enabled is defined or item.item.enabled == True
-    - item.stat is defined
-    - not item.stat.exists
-  with_items: '{{ sites_enabled.results }}'
+    - item.stat is defined and not item.stat.exists
+  with_items:
+    - '{{ ptx_sites_enabled.results }}'
+    - '{{ ssl_sites_enabled.results }}'
 
 # Restart if we need to.
 
@@ -73,7 +75,8 @@
   set_fact:
     vhosts_changed: True
   with_items:
-    - '{{ sites_enabled.results }}'
+    - '{{ ptx_sites_enabled.results }}'
+    - '{{ ssl_sites_enabled.results }}'
     - '{{ vhost_upload.results }}'
   when:
     - not item.item.enabled is defined or item.item.enabled == True

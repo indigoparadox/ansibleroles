@@ -1,10 +1,13 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
+- include_tasks: 'unix-ssl-all.yml'
+
 - name: Install certbot ACME client
   package:
     name: certbot
     state: present
+  when: getcert_pkg_certbot is defined and getcert_pkg_certbot
 
 - name: Create ACME group
   group:
@@ -38,43 +41,27 @@
     group: '{{ getcert_le_user.group }}'
     recurse: yes
 
-- name: Create ACME site directories
-  file:
-    path: '{{ item.document_root }}/.well-known'
-    state: directory
-    owner: '{{ getcert_le_user.name }}'
-    group: '{{ getcert_le_user.group }}'
-    mode: 0775
-  when:
-    - item.ssl is defined
-    - item.ssl == 'acme'
-  with_items: '{{ getcert_sites }}'
-
-- name: Generate SSL certificate (ACME)
-  command: 'certbot certonly --agree-tos -m {{ item.item.item.le_mail | default(getcert_le_mail) }} --config-dir {{ getcert_le_dirs.config }} --logs-dir {{ getcert_le_dirs.logs }} --work-dir {{ getcert_le_dirs.work }} --webroot -w {{ item.item.item.document_root }} -d {{ item.item.item.server_name }}'
-  when:
-    - not item.item.item.enabled is defined or item.item.item.enabled == True
-    - item.item.item.ssl is defined
-    - item.item.item.ssl == 'acme'
-    - not item.item.stat.exists
-    - not item.failed
-  become: yes
-  become_user: '{{ getcert_le_user.name }}'
-  with_items: '{{ ssl_valid_remote.results }}'
-
 - name: Renew SSL certificate (ACME)
-  command: 'certbot renew --agree-tos -m {{ item.item.item.le_mail | default(getcert_le_mail) }} --config-dir {{ getcert_le_dirs.config }} --logs-dir {{ getcert_le_dirs.logs }} --work-dir {{ getcert_le_dirs.work }} --webroot -w {{ item.item.item.document_root }} -d {{ item.item.item.server_name }}'
+  command: 'certbot renew --agree-tos -m {{ le_mail }} --config-dir {{ getcert_le_dirs.config }} --logs-dir {{ getcert_le_dirs.logs }} --work-dir {{ getcert_le_dirs.work }} --webroot -w {{ document_root }} -d {{ common_name }}'
   when:
-    - not item.item.item.enabled is defined or item.item.item.enabled == True
-    - item.item.item.ssl is defined
-    - item.item.item.ssl == 'acme'
-    - item.item.stat.exists
-    - item.failed
+    - ssl_crt_remote.stat.exists
+    - ssl_key_remote.stat.exists
+    - ssl_valid_remote.failed
+  register: acme_renew
   become: yes
   become_user: '{{ getcert_le_user.name }}'
-  with_items: '{{ ssl_valid_remote.results }}'
+  ignore_errors: yes
 
 #- name: Upload certbot config (ACME)
+- name: Generate SSL certificate (ACME)
+  command: 'certbot certonly --agree-tos -m {{ le_mail }} --config-dir {{ getcert_le_dirs.config }} --logs-dir {{ getcert_le_dirs.logs }} --work-dir {{ getcert_le_dirs.work }} --webroot -w {{ document_root }} -d {{ common_name }}'
+  when:
+    - not ssl_crt_remote.stat.exists or
+      not ssl_key_remote.stat.exists or
+      (acme_renew.rc is defined and acme_renew.rc != 0)
+  become: yes
+  become_user: '{{ getcert_le_user.name }}'
+
 #  template:
 #    src: 'templates/acme-renewal.conf.j2'
 #    dest: '{{ getcert_certbot_config_dir }}/renewal/{{ item.server_name }}.conf'

@@ -1,6 +1,8 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
+- include_tasks: 'unix-ssl-all.yml'
+
 - name: Fetch SSL certificate inventory (FreeNAS)
   uri:
     url: '{{ getcert_freenas_api_url }}/api/v1.0/system/certificate'
@@ -10,6 +12,10 @@
     body_format: json
     force_basic_auth: yes
     validate_certs: False
+  when:
+    - not ssl_crt_remote.stat.exists or
+      ssl_valid_remote.failed or
+      not ssl_key_remote.stat.exists
   delegate_to: localhost
   register: ssl_inventory
   no_log: true
@@ -19,7 +25,9 @@
     dest: '{{ cert_path }}'
     content: >
       {{ item.cert_certificate }}{{ getcert_freenas_ca }}
-  when: common_name == item.cert_common
+  when:
+    - common_name == item.cert_common
+    - not ssl_crt_remote.stat.exists or ssl_valid_remote.failed
   with_items:
   - '{{ ssl_inventory.json }}'
 
@@ -28,7 +36,9 @@
     dest: '{{ privkey_path }}'
     content: >
       {{ item.cert_privatekey }}
-  when:  common_name == item.cert_common
+  when:
+    - common_name == item.cert_common
+    - not ssl_key_remote.stat.exists
   with_items:
   - '{{ ssl_inventory.json }}'
 
