@@ -1,0 +1,38 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Check whether SSL certificate exists
+  stat: 
+    path: '{{ cert_path }}'
+  register: ssl_crt_remote
+
+- name: Check whether SSL private key exists
+  stat: 
+    path: '{{ privkey_path }}'
+  register: ssl_key_remote
+
+- name: Check SSL certificate validity
+  openssl_certificate:
+    path: '{{ cert_path }}'
+    provider: assertonly
+    has_expired: False
+  ignore_errors: True
+  register: ssl_valid_remote
+  when: ssl_crt_remote.stat.exists
+
+- name: Check whether SSL CA chain exists (MSAD)
+  stat: { path: '{{ ca_cert_path }}' }
+  when: not getcert_engine == 'acme'
+  register: ssl_ca_crt_remote
+
+- name: Upload SSL CA chain (MSAD)
+  copy:
+    src: '{{ getcert_ca_crt_local }}'
+    dest: '{{ ca_cert_path }}'
+    owner: '{{ getcert_ssl_owner }}'
+    group: '{{ getcert_ssl_group }}'
+    mode: '0660'
+  when:
+    - not getcert_engine == 'acme'
+    - not ssl_ca_crt_remote.stat.exists
+
