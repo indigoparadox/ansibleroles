@@ -17,7 +17,7 @@
 {% if item.ssl == 'acme' %}
 	SSLCertificateFile {{ webvhost_le_dirs.config }}/live/{{ item.server_name | default(inventory_hostname) }}/fullchain.pem
 	SSLCertificateKeyFile {{ webvhost_le_dirs.config }}/live/{{ item.server_name | default(inventory_hostname) }}/privkey.pem
-	Include {{ webvhost_le_dirs.config }}/options-ssl-apache.conf
+	#Include {{ webvhost_le_dirs.config }}/options-ssl-apache.conf
 {% else %}
 	SSLCertificateFile {{ webvhost_ssl_path }}/{{ item.server_name | default(inventory_hostname) }}.crt
 	SSLCertificateChainFile {{ webvhost_ssl_path }}/{{ item.server_name | default(inventory_hostname) }}.ca.crt

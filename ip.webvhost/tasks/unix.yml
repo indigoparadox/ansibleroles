@@ -53,6 +53,18 @@
     - not item.enabled is defined or item.enabled == True
   with_items: "{{ webvhost_sites | selectattr('document_root', 'defined') | list }}"
 
+- name: Create well-known site directory
+  file:
+    path: '{{ item.document_root }}/.well-known'
+    state: directory
+    owner: '{{ item.user | default(webvhost_htdocs_owner) }}'
+    group: '{{ item.group | default(webvhost_htdocs_group) }}'
+    mode: 0775
+  when:
+    - item.ssl is defined
+    - item.ssl == 'acme'
+  with_items: '{{ webvhost_sites }}'
+
 # Request SSL certificates.
 
 - include_role:
@@ -64,28 +76,16 @@
     loop_var: site
   vars:
     common_name: '{{ site.server_name | default(inventory_hostname) }}'
-    csr_path: "{{ getcert_le_dirs.config + '/live' if getcert_engine == 'acme' else getcert_ssl_path }}/{{ 'request.csr' if getcert_engine == 'acme' else common_name + '.csr' }}"
-    privkey_path: "{{ getcert_le_dirs.config + '/live' if getcert_engine == 'acme' else getcert_ssl_path }}/{{ 'privkey.pem' if getcert_engine == 'acme' else common_name + '.pem' }}"
-    cert_path: "{{ getcert_le_dirs.config + '/live' if getcert_engine == 'acme' else getcert_ssl_path }}/{{ 'fullchain.pem' if getcert_engine == 'acme' else common_name + '.crt' }}"
+    csr_path: "{{ getcert_le_dirs.config + '/live/' + common_name + '/' if getcert_engine == 'acme' else getcert_ssl_path }}/{{ 'request.csr' if getcert_engine == 'acme' else common_name + '.csr' }}"
+    privkey_path: "{{ getcert_le_dirs.config + '/live/' + common_name + '/' if getcert_engine == 'acme' else getcert_ssl_path }}/{{ 'privkey.pem' if getcert_engine == 'acme' else common_name + '.pem' }}"
+    cert_path: "{{ getcert_le_dirs.config + '/live/' + common_name + '/' if getcert_engine == 'acme' else getcert_ssl_path }}/{{ 'fullchain.pem' if getcert_engine == 'acme' else common_name + '.crt' }}"
     ca_cert_path: '{{ getcert_ssl_path }}/{{ common_name }}.ca.crt'
     getcert_engine: '{{ site.ssl }}'
+    document_root: '{{ site.document_root }}'
+    le_mail: '{{ site.le_mail | default(getcert_le_mail) }}'
   with_items: '{{ webvhost_sites }}'
   when:
     - site.ssl is defined
-
-#- include_role:
-#    name: 'ip.getcert'
-#    tasks_from: 'unix-ssl-acme.yml'
-#    allow_duplicates: yes
-#    defaults_from: 'main.yml'
-#  when: webvhost_features.acme is defined and webvhost_features.acme
-#
-#- include_role:
-#    name: 'ip.getcert'
-#    tasks_from: 'unix-ssl-freenas.yml'
-#    allow_duplicates: yes
-#    defaults_from: 'main.yml'
-#  when: webvhost_features.freenas is defined and webvhost_features.freenas
 
 # Enable SSL-enabled vhosts, now that they should have certificates.
 
