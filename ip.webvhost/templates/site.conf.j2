@@ -23,10 +23,16 @@
 	SSLCertificateChainFile {{ webvhost_ssl_path }}/{{ item.server_name | default(inventory_hostname) }}.ca.crt
 	SSLCertificateKeyFile {{ webvhost_ssl_path }}/{{ item.server_name | default(inventory_hostname) }}.pem
 {% endif %}
-{% if item.ssl.stapling is defined %}
+{% if item.ssl.stapling is defined and item.ssl.stapling %}
 	SSLUseStapling on
 	SSLStaplingResponderTimeout 5
 	SSLStaplingReturnResponderErrors off
+{% endif %}
+{% if item.proxy_ssl is defined and item.proxy_ssl %}
+	SSLProxyEngine on
+	SSLProxyVerify none
+	SSLProxyCheckPeerCN off
+	SSLProxyCheckPeerName off
 {% endif %}
 
 {% endif %}
