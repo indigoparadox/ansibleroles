@@ -16,11 +16,11 @@
 ?SECTION UNTRACKED
 ?SECTION NEW
 
-{% for rule in shorewall_rules_master %}
-{% if rule.type == "macro" %}
-{{ rule.macro }}({{ rule.rule }})	{{ rule.src }}	{{ rule.dest }}
-{% elif rule.type == "define" %}
-{{ rule.rule }}	{{ rule.src }}	{{ rule.dest }}	{{ rule.proto }}	{{ rule.port }} # {{ rule.name }}
+{% for rule in shorewall_rules %}
+{% if rule.macro is defined %}
+{{ rule.macro }}({{ rule.rule }})	{{ rule.src if rule.src is string else (rule.src | join(',')) }}	{{ rule.dest }}
+{% else %}
+{{ rule.rule }}	{{ rule.src if rule.src is string else (rule.src | join(',')) }}	{{ rule.dest }}	{{ rule.proto }}	{{ rule.port }}{{ '	# ' + rule.name if rule.name is defined }}
 {% endif %}
 {% endfor %}
 

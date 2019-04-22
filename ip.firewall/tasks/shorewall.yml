@@ -8,112 +8,52 @@
 
 # Firewall zones
 
-- name: Create shorewall zones list
-  set_fact:
-    shorewall_zones_master:
-      - name: fw
-        type: firewall
-        options: ""
-      - name: lan
-        type: ""
-        options: ""
-      - name: virt
-        type: ""
-        options: ""
-
-- name: Add shorewall group zones
-  set_fact:
-    shorewall_zones_master: "{{ shorewall_zones_master + shorewall_zones_group }}"
-  when: shorewall_zones_group is defined
-
-- name: Add shorewall host zones
-  set_fact:
-    shorewall_zones_master: "{{ shorewall_zones_master + shorewall_zones_host }}"
-  when: shorewall_zones_host is defined
-
 - name: Configure shorewall zones
   template:
-    src: ../ConfigFiles/shorewall/zones.j2
+    src: templates/shorewall/zones.j2
     dest: /etc/shorewall/zones
   register: zones
+  vars:
+    shorewall_zones: '{{ firewall_zones | default(firewall_zones_default) }}'
 
 # Firewall policies
 
-- name: Create shorewall policies list
-  set_fact:
-    shorewall_policies_master: []
-
-- name: Add shorewall group policies
-  set_fact:
-    shorewall_policies_master: "{{ shorewall_policies_master + shorewall_policies_group }}"
-  when: shorewall_policies_group is defined
-
-- name: Add shorewall host policies
-  set_fact:
-    shorewall_policies_master: "{{ shorewall_policies_master + shorewall_policies_host }}"
-  when: shorewall_policies_host is defined
-
 - name: Configure shorewall policies
   template:
-    src: ../ConfigFiles/shorewall/policy.j2
+    src: templates/shorewall/policy.j2
     dest: /etc/shorewall/policy
   register: policies
+  vars:
+    shorewall_policies: '{{ firewall_policies | default(firewall_policies_default) }}'
 
 # Firewall interfaces
 
 - name: Configure shorewall interfaces
   template:
-    src: ../ConfigFiles/shorewall/interfaces.j2
+    src: templates/shorewall/interfaces.j2
     dest: /etc/shorewall/interfaces
   register: interfaces
+  vars:
+    shorewall_interfaces: '{{ firewall_interfaces | default(firewall_interfaces_default) }}'
 
 # Firewall SNAT
 
 - name: Configure shorewall SNAT
   template:
-    src: ../ConfigFiles/shorewall/snat.j2
+    src: templates/shorewall/snat.j2
     dest: /etc/shorewall/snat
   register: snat
   when: shorewall_snat_host is defined or shorewall_snat_group is defined
 
 # Firewall Rules
 
-- name: Create shorewall rules list
-  set_fact:
-    shorewall_rules_master:
-    - src: lan
-      dest: "$FW"
-      macro: SSH
-      rule: ACCEPT
-      type: macro
-    - src: lan
-      dest: "$FW"
-      macro: Ping
-      rule: ACCEPT
-      type: macro
-    - src: lan
-      dest: "$FW"
-      rule: ACCEPT
-      proto: tcp
-      port: 5666
-      type: define
-      name: NRPE
-
-- name: Add shorewall group rules
-  set_fact:
-    shorewall_rules_master: "{{ shorewall_rules_master + shorewall_rules_group }}"
-  when: shorewall_rules_group is defined
-
-- name: Add shorewall host rules
-  set_fact:
-    shorewall_rules_master: "{{ shorewall_rules_master + shorewall_rules_host }}"
-  when: shorewall_rules_host is defined
-
 - name: Configure shorewall rules
   template:
-    src: ../ConfigFiles/shorewall/rules.j2
+    src: templates/shorewall/rules.j2
     dest: /etc/shorewall/rules
   register: rules
+  vars:
+    shorewall_rules: '{{ firewall_rules | default(firewall_rules_default) }}'
 
 # Service
 

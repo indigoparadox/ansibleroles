@@ -9,12 +9,6 @@
 ?FORMAT 2
 ###############################################################################
 #ZONE		INTERFACE		OPTIONS
-{% if shorewall_interfaces_host is defined %}
-{% for interface in shorewall_interfaces_host %}
-{{ interface.zone }}	{{ interface.ifname }}	{{ interface.options }}
+{% for interface in shorewall_interfaces %}
+{{ interface.zone }}	{{ interface.ifname }}	{{ interface.options | default('-') }}
 {% endfor %}
-{% elif shorewall_interfaces_group is defined %}
-{% for interface in shorewall_interfaces_group %}
-{{ interface.zone }}	{{ interface.ifname }}	{{ interface.options }}
-{% endfor %}
-{% endif %}
