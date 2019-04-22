@@ -1,0 +1,16 @@
+#
+# Shorewall -- /etc/shorewall/rtrules
+#
+# For information about entries in this file, type "man shorewall-rtrules"
+#
+# For additional information, see http://www.shorewall.net/MultiISP.html
+#
+####################################################################################
+#SOURCE			DEST			PROVIDER	PRIORITY	MASK
+#
+# Secondary DNS Servers (for ping tests)
+0.0.0.0/0		0.0.0.0/0		1		1100
+#0.0.0.0/0		8.8.4.4			2		1000
+#0.0.0.0/0		208.67.220.220		2		1000
+#0.0.0.0/0		209.244.0.4		2		1000
+#0.0.0.0/0		1.0.0.1		2		1000

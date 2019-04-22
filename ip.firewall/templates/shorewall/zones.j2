@@ -1,0 +1,15 @@
+#
+# Shorewall -- /etc/shorewall/zones
+#
+# For information about this file, type "man shorewall-zones"
+#
+# The manpage is also online at
+# http://www.shorewall.net/manpages/shorewall-zones.html
+#
+###############################################################################
+#ZONE		TYPE		OPTIONS		IN_OPTIONS	OUT_OPTIONS
+
+{% for zone in shorewall_zones_master %}
+{{ zone.name }}	{{ zone.type }}	{{ zone.options }}
+{% endfor %}
+

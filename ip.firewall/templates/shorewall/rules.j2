@@ -1,0 +1,26 @@
+#
+# Shorewall -- /etc/shorewall/rules
+#
+# For information on the settings in this file, type "man shorewall-rules"
+#
+# The manpage is also online at
+# http://www.shorewall.net/manpages/shorewall-rules.html
+#
+##############################################################################################################################################################
+#ACTION		SOURCE		DEST		PROTO	DPORT	SPORT	ORIGDEST	RATE	USER	MARK	CONNLIMIT	TIME	HEADERS	SWITCH	HELPER
+
+?SECTION ALL
+?SECTION ESTABLISHED
+?SECTION RELATED
+?SECTION INVALID
+?SECTION UNTRACKED
+?SECTION NEW
+
+{% for rule in shorewall_rules_master %}
+{% if rule.type == "macro" %}
+{{ rule.macro }}({{ rule.rule }})	{{ rule.src }}	{{ rule.dest }}
+{% elif rule.type == "define" %}
+{{ rule.rule }}	{{ rule.src }}	{{ rule.dest }}	{{ rule.proto }}	{{ rule.port }} # {{ rule.name }}
+{% endif %}
+{% endfor %}
+
