@@ -1,3 +1,40 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 # vars file for ip.firewall
+
+firewall_zones_default:
+  - name: fw
+    type: firewall
+  - name: lan
+
+firewall_rules_default:
+  - src: lan
+    dest: "$FW"
+    macro: SSH
+    rule: ACCEPT
+    type: macro
+  - src: lan
+    dest: "$FW"
+    macro: Ping
+    rule: ACCEPT
+    type: macro
+  - src: lan
+    dest: "$FW"
+    rule: ACCEPT
+    proto: tcp
+    port: 5666
+    type: define
+    name: NRPE
+
+firewall_policies_default:
+  - src: "$FW"
+    dest: lan
+    rule: ACCEPT
+  - src: lan
+    dest: "$FW"
+    rule: REJECT
+
+firewall_interfaces_default:
+  - zone: lan
+    ifname: eth0
+

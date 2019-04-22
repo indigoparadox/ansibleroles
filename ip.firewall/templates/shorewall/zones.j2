@@ -9,7 +9,7 @@
 ###############################################################################
 #ZONE		TYPE		OPTIONS		IN_OPTIONS	OUT_OPTIONS
 
-{% for zone in shorewall_zones_master %}
-{{ zone.name }}	{{ zone.type }}	{{ zone.options }}
+{% for zone in shorewall_zones %}
+{{ zone.name }}	{{ zone.type | default('-') }}	{{ zone.options | default('-') }}
 {% endfor %}
 
