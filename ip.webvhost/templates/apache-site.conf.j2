@@ -1,34 +1,34 @@
 
 {% include 'auto_template.j2' %}
 
-{% if item.ssl is defined %}
-<VirtualHost {{ item.ip | default('*') }}:{{ item.port | default('443') }}>
+{% if site.ssl is defined %}
+<VirtualHost {{ site.ip | default('*') }}:{{ site.port | default('443') }}>
 {% else %}
-<VirtualHost {{ item.ip | default('*') }}:{{ item.port | default('80') }}>
+<VirtualHost {{ site.ip | default('*') }}:{{ site.port | default('80') }}>
 {% endif %}
-	ServerAdmin {{ item.server_admin | default(webvhost_server_admin) }}
-	ServerName {{ item.server_name | default(inventory_hostname) }}
-{% if item.document_root is defined %}
-	DocumentRoot {{ item.document_root }}
+	ServerAdmin {{ site.server_admin | default(webvhost_server_admin) }}
+	ServerName {{ site.server_name | default(inventory_hostname) }}
+{% if site.document_root is defined %}
+	DocumentRoot {{ site.document_root }}
 
 {% endif %}
-{% if item.ssl is defined %}
+{% if site.ssl is defined %}
 	SSLEngine on
-{% if item.ssl == 'acme' %}
-	SSLCertificateFile {{ webvhost_le_dirs.config }}/live/{{ item.server_name | default(inventory_hostname) }}/fullchain.pem
-	SSLCertificateKeyFile {{ webvhost_le_dirs.config }}/live/{{ item.server_name | default(inventory_hostname) }}/privkey.pem
+{% if site.ssl == 'acme' %}
+	SSLCertificateFile {{ webvhost_le_dirs.config }}/live/{{ site.server_name | default(inventory_hostname) }}/fullchain.pem
+	SSLCertificateKeyFile {{ webvhost_le_dirs.config }}/live/{{ site.server_name | default(inventory_hostname) }}/privkey.pem
 	#Include {{ webvhost_le_dirs.config }}/options-ssl-apache.conf
 {% else %}
-	SSLCertificateFile {{ webvhost_ssl_path }}/{{ item.server_name | default(inventory_hostname) }}.crt
-	SSLCertificateChainFile {{ webvhost_ssl_path }}/{{ item.server_name | default(inventory_hostname) }}.ca.crt
-	SSLCertificateKeyFile {{ webvhost_ssl_path }}/{{ item.server_name | default(inventory_hostname) }}.pem
+	SSLCertificateFile {{ webvhost_ssl_path }}/{{ site.server_name | default(inventory_hostname) }}.crt
+	SSLCertificateChainFile {{ webvhost_ssl_path }}/{{ site.server_name | default(inventory_hostname) }}.ca.crt
+	SSLCertificateKeyFile {{ webvhost_ssl_path }}/{{ site.server_name | default(inventory_hostname) }}.pem
 {% endif %}
-{% if item.ssl.stapling is defined and item.ssl.stapling %}
+{% if site.ssl.stapling is defined and site.ssl.stapling %}
 	SSLUseStapling on
 	SSLStaplingResponderTimeout 5
 	SSLStaplingReturnResponderErrors off
 {% endif %}
-{% if item.proxy_ssl is defined and item.proxy_ssl %}
+{% if site.proxy_ssl is defined and site.proxy_ssl %}
 	SSLProxyEngine on
 	SSLProxyVerify none
 	SSLProxyCheckPeerCN off
@@ -36,16 +36,16 @@
 {% endif %}
 
 {% endif %}
-{% if item.redirects is defined %}
-{% for redirect in item.redirects %}
+{% if site.redirects is defined %}
+{% for redirect in site.redirects %}
 	Redirect {{ redirect.type }} {{ redirect.src }} {{ redirect.dest }}
 {% endfor %}
 
 {% endif %}
-{% if item.rewrites is defined %}
+{% if site.rewrites is defined %}
 	RewriteEngine On
 
-{% for rewrite in item.rewrites %}
+{% for rewrite in site.rewrites %}
 {% for condition in rewrite.conditions %}
 	RewriteCond {{ condition.test }} {{ condition.test_val }} {{ condition.options }}
 {% endfor %}
@@ -53,17 +53,9 @@
 
 {% endfor %}
 {% endif %}
-{% if item.locations is defined %}
-{% for location in item.locations %}
-{% set tagname = 'Location' %}
-{% include 'location.conf.j2' %}
-
-{% endfor %}
-{% endif %}
-{% if item.directories is defined %}
-{% for location in item.directories %}
-{% set tagname = 'Directory' %}
-{% include 'location.conf.j2' %}
+{% if site.locations is defined %}
+{% for location in site.locations %}
+{% include 'apache-location.conf.j2' %}
 
 {% endfor %}
 {% endif %}

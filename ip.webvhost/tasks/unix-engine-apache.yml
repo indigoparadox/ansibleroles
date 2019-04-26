@@ -18,52 +18,60 @@
 
 - name: Upload SSL apache virtualhost config
   template:
-    src: 'templates/site.conf.j2'
-    dest: '/etc/apache2/sites-available/{{ item.name }}.conf'
+    src: 'templates/apache-site.conf.j2'
+    dest: '/etc/apache2/sites-available/{{ site.name }}.conf'
     backup: True
   register: vhost_upload
   with_items: "{{ webvhost_sites | selectattr('ssl', 'defined') | list }}"
   when:
-    - not item.enabled is defined or item.enabled == True
+    - not site.enabled is defined or site.enabled == True
     - do_ssl
+  loop_control:
+    loop_var: site
 
 - name: Upload non-SSL apache virtualhost config
   template:
-    src: 'templates/site.conf.j2'
-    dest: '/etc/apache2/sites-available/{{ item.name }}.conf'
+    src: 'templates/apache-site.conf.j2'
+    dest: '/etc/apache2/sites-available/{{ site.name }}.conf'
     backup: True
   register: vhost_upload
   with_items: "{{ webvhost_sites | rejectattr('ssl', 'defined') | list }}"
   when:
-    - not item.enabled is defined or item.enabled == True
+    - not site.enabled is defined or site.enabled == True
     - not do_ssl
+  loop_control:
+    loop_var: site
 
 # Enable SSL vhost (only during second pass, do_ssl)
 
 - name: Check whether SSL vhost is enabled
   stat:
-    path: '/etc/apache2/sites-enabled/{{ item.name }}.conf'
+    path: '/etc/apache2/sites-enabled/{{ site.name }}.conf'
   register: ssl_sites_enabled
   with_items: "{{ webvhost_sites | selectattr('ssl', 'defined') | list }}"
   when:
-    - not item.enabled is defined or item.enabled == True
+    - not site.enabled is defined or site.enabled == True
     - do_ssl is defined and do_ssl
+  loop_control:
+    loop_var: site
 
 - name: Check whether non-SSL vhost is enabled
   stat:
-    path: '/etc/apache2/sites-enabled/{{ item.name }}.conf'
+    path: '/etc/apache2/sites-enabled/{{ site.name }}.conf'
   register: ptx_sites_enabled
   with_items: "{{ webvhost_sites | rejectattr('ssl', 'defined') | list }}"
   when:
     - not do_ssl is defined or not do_ssl
-    - not item.enabled is defined or item.enabled == True
+    - not site.enabled is defined or site.enabled == True
+  loop_control:
+    loop_var: site
 
 # Enable any vhosts detected as disabled above but configged as enabled.
 
 - name: Enable vhost
-  command: 'a2ensite {{ item.item.name }}'
+  command: 'a2ensite {{ item.site.name }}'
   when:
-    - not item.item.enabled is defined or item.item.enabled == True
+    - not item.site.enabled is defined or item.site.enabled
     - item.stat is defined and not item.stat.exists
   with_items:
     - '{{ ptx_sites_enabled.results }}'
@@ -79,7 +87,7 @@
     - '{{ ssl_sites_enabled.results }}'
     - '{{ vhost_upload.results }}'
   when:
-    - not item.item.enabled is defined or item.item.enabled == True
+    - not item.site.enabled is defined or item.site.enabled == True
     - (item.stat is defined and not item.stat.exists) or
       (item.changed is defined and item.changed)
 

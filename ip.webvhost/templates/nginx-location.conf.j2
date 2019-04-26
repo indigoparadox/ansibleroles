@@ -1,8 +1,12 @@
-  location {{ location.path }} {{ '{' }}
+  location {{ location.web_path }} {{ '{' }}
 {% if location.redirects is defined %}
 {% for redirect in location.redirects %}
-  rewrite {{ redirect.src }} {{ redirect.dest }} {{ redirect.type }};
+    rewrite {{ redirect.src }} {{ redirect.dest }} {{ redirect.type }};
 {% endfor %}
+
+{% endif %}
+{% if location.local_path is defined %}
+    alias {{ location.local_path }};
 
 {% endif %}
 {% if location.proxy_url is defined %}
