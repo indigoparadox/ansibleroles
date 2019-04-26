@@ -55,6 +55,26 @@
   vars:
     shorewall_rules: '{{ firewall_rules | default(firewall_rules_default) }}'
 
+# Firewall Routing
+
+- name: Configure shorewall providers
+  template:
+    src: templates/shorewall/providers.j2
+    dest: /etc/shorewall/providers
+  register: providers
+  vars:
+    shorewall_rules: '{{ firewall_routerules }}'
+  when: firewall_providers is defined
+
+- name: Configure shorewall routing rules
+  template:
+    src: templates/shorewall/rtrules.j2
+    dest: /etc/shorewall/rtrules
+  register: rtrules
+  vars:
+    shorewall_rules: '{{ firewall_providers }}'
+  when: firewall_routerules is defined and firewall_providers is defined
+
 # Service
 
 - name: Enable shorewall startup
@@ -68,5 +88,5 @@
   service:
     name: shorewall
     state: restarted
-  when: zones.changed or interfaces.changed or policies.changed or rules.changed or startme.changed or snat.changed
+  when: zones.changed or interfaces.changed or policies.changed or rules.changed or startme.changed or snat.changed or (rtrules is defined and rtrules.changed) or (providers is defined and providers.changed)
 
