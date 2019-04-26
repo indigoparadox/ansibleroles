@@ -7,10 +7,6 @@
 #
 ####################################################################################
 #SOURCE			DEST			PROVIDER	PRIORITY	MASK
-#
-# Secondary DNS Servers (for ping tests)
-0.0.0.0/0		0.0.0.0/0		1		1100
-#0.0.0.0/0		8.8.4.4			2		1000
-#0.0.0.0/0		208.67.220.220		2		1000
-#0.0.0.0/0		209.244.0.4		2		1000
-#0.0.0.0/0		1.0.0.1		2		1000
+{% for rule in firewall_routerules %}
+{{ rule.srcip | default('0.0.0.0/0') }}	{{ rule.destip | default('0.0.0.0/0') }}	{{ rule.provider | default('1') }}	{{ rule.priority }}
+{% endfor %}
