@@ -1,8 +1,12 @@
-{% if location.alias is defined %}
-	Alias {{ location.alias }} {{ location.path }}
-
+{% if location.local_path is defined %}
+{% set tagname = 'Location' %}
+{% if location.local_path != site.document_root %}
+	Alias {{ location.web_path }} {{ location.local_path }}
 {% endif %}
-	<{{ tagname }} {{ location.path }}>
+	<Directory {{ location.local_path }}>
+{% else %}
+	<Location {{ location.web_path }}>
+{% endif %}
 		Options {{ location.options | default(webvhost_directory_options) | join(' ') }}
 
 {% if location.proxy_url is defined %}
@@ -54,5 +58,9 @@
 		ErrorDocument {{ error_doc.code }} {{ error_doc.path }}
 {% endfor %}
 {% endif %}
-	</{{ tagname }}>
+{% if location.local_path is defined %}
+	</Directory>
+{% else %}
+	</Location>
+{% endif %}
 
