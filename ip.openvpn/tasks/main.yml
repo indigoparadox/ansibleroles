@@ -7,6 +7,7 @@
     suffix: ovpn
   register: ca_tmp
   delegate_to: localhost
+  changed_when: false
 
 - name: Decrypt CA private files to {{ ca_tmp.path }}
   copy:
@@ -15,6 +16,7 @@
   delegate_to: localhost
   with_dict: '{{ openvpn_ca_files }}'
   no_log: true
+  changed_when: false
 
 - include_tasks: client-windows.yml
   when:
@@ -35,4 +37,5 @@
     - '{{ ca_tmp.path }}/{{ openvpn_filename_cert }}'
     - '{{ ca_tmp.path }}/{{ openvpn_filename_ta }}'
     - '{{ ca_tmp.path }}'
+  changed_when: false
 
