@@ -1,0 +1,31 @@
+client
+dev                     {{ openvpn_dev }}
+proto                   {{ openvpn_proto }}
+remote                  {{ openvpn_remote}} {{ openvpn_port }}
+resolv-retry            infinite
+cipher                  {{ openvpn_cipher }}
+auth			{{ openvpn_auth }}
+ns-cert-type            server
+{% if openvpn_tls_auth_file is defined %}
+tls-auth                {{ openvpn_tls_auth_file }} {{ openvpn_tls_auth_client_dir }}
+{% endif %}
+float
+nobind
+tls-client
+persist-key
+persist-tun
+ca                      {{ openvpn_filename_cert_ca }}
+cert                    {{ openvpn_filename_cert }}
+key                     {{ openvpn_filename_key }}
+{% if openvpn_verbose is defined %}
+verb                    {{ openvpn_verbose }}
+{% endif %}
+{% if openvpn_status is defined %}
+status                  {{ openvpn_status }}
+{% endif %}
+{% if openvpn_log is defined %}
+log-append              {{ openvpn_log }}
+{% endif %}
+{% if openvpn_comp_lzo is defined %}
+comp-lzo		{{ openvpn_comp_lzo }}
+{% endif %}
