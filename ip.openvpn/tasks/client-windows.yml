@@ -7,11 +7,17 @@
     path: HKLM:\SOFTWARE\OpenVPN
   register: reg_openvpn
 
+- name: Ensure temp directory present
+  win_file:
+    path: '{{ installer_temp }}'
+    state: directory
+  when: not reg_openvpn.exists
+
 - name: Upload OpenVPN installer
   win_copy:
     src: '{{ installer_src }}/{{ openvpn_installer }}'
     dest: '{{ installer_temp }}\\{{ openvpn_installer }}'
-  when: ansible_os_family == 'Windows' and not reg_openvpn.exists
+  when: not reg_openvpn.exists
 
 - name: Run OpenVPN installer
   win_command: '{{ installer_temp }}\\{{ openvpn_installer }} /S'
@@ -20,6 +26,11 @@
 - name: Cleanup OpenVPN installer
   win_file:
     path: '{{ installer_temp }}\\{{ openvpn_installer }}'
+    state: absent
+
+- name: Cleanup OpenVPN desktop shortcut
+  win_file:
+    path: 'C:\\Users\\Public\\Desktop\\OpenVPN GUI.lnk'
     state: absent
 
 - name: Check for OpenVPN client private key
@@ -66,7 +77,7 @@
     csr_path: '{{ ca_tmp.path }}/{{ openvpn_filename_csr }}'
     state: present
     provider: ownca
-    ownca_digest: sha1
+    ownca_digest: '{{ openvpn_ca_digest }}'
   delegate_to: localhost
   when: not client_crt.stat.exists
 
@@ -100,6 +111,7 @@
 - name: Fix OpenVPN TLS auth key line endings
   command: 'unix2dos {{ ca_tmp.path }}/{{ openvpn_filename_ta }}'
   delegate_to: localhost
+  changed_when: false
 
 - name: Upload OpenVPN TLS auth key
   win_copy:
@@ -110,6 +122,7 @@
 - name: Fix OpenVPN CA certificate line endings
   command: 'unix2dos {{ ca_tmp.path }}/{{ openvpn_filename_cert_ca }}'
   delegate_to: localhost
+  changed_when: false
 
 - name: Upload OpenVPN CA certificate
   win_copy:
@@ -120,4 +133,10 @@
   win_template:
     src: 'templates/client.conf.j2'
     dest: '{{ openvpn_win_config_root }}\\{{ openvpn_network_name }}.ovpn'
+
+- name: Enable VPN service
+  win_service:
+    name: OpenVPNService
+    state: started
+    start_mode: auto
 
