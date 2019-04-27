@@ -22,23 +22,33 @@
     path: '{{ installer_temp }}\\{{ openvpn_installer }}'
     state: absent
 
-- name: Generate OpenVPN private key
+- name: Check for OpenVPN client private key
+  win_stat:
+    path: '{{ openvpn_win_config_root }}\\{{ openvpn_filename_key }}'
+  register: client_key
+
+- name: Check for OpenVPN client certificate
+  win_stat:
+    path: '{{ openvpn_win_config_root }}\\{{ openvpn_filename_cert }}'
+  register: client_crt
+
+- name: Generate OpenVPN client private key
   openssl_privatekey:
-    path: "{{ openvpn_store_path }}/{{ openvpn_node_name + '.' + (ansible_os_family | lower) if openssl_node_has_os else openvpn_node_name }}.key"
+    path: '{{ ca_tmp.path }}/{{ openvpn_filename_key }}'
     size: '{{ openvpn_private_key_size }}'
   delegate_to: localhost
+  when: not client_key.stat.exists
 
-- name: Generate OpenVPN certificate request
+- name: Generate OpenVPN client certificate request
   openssl_csr:
-    path: '{{ openvpn_store_path }}/{{ openvpn_filename_csr }}'
-    privatekey_path: '{{ openvpn_store_path }}/{{ openvpn_filename_key }}'
+    path: '{{ ca_tmp.path }}/{{ openvpn_filename_csr }}'
+    privatekey_path: '{{ ca_tmp.path }}/{{ openvpn_filename_key }}'
     common_name: "{{ openvpn_node_name + '.' + (ansible_os_family | lower) if openssl_node_has_os else openvpn_node_name }}"
     country_name: '{{ openvpn_country }}'
     locality_name: '{{ openvpn_locality }}'
     state_or_province_name: '{{ openvpn_state_or_province }}'
     organization_name: '{{ openvpn_organization }}'
     email_address: '{{ openvpn_email_address }}'
-    digest: sha1
     key_usage:
       - digitalSignature
     extended_key_usage:
@@ -46,45 +56,68 @@
     basic_constraints:
       - 'CA:FALSE'
   delegate_to: localhost
+  when: not client_crt.stat.exists
 
-- name: Generate OpenVPN certificate
+- name: Generate OpenVPN client certificate
   openssl_certificate:
-    path: '{{ openvpn_store_path }}/{{ openvpn_filename_cert }}'
-    privatekey_path: '{{ openvpn_store_path }}/{{ openvpn_filename_key_ca }}'
-    csr_path: '{{ openvpn_store_path }}/{{ openvpn_filename_csr }}'
+    path: '{{ ca_tmp.path }}/{{ openvpn_filename_cert }}.temp.crt'
+    ownca_path: '{{ ca_tmp.path }}/{{ openvpn_filename_cert_ca }}'
+    ownca_privatekey_path: '{{ ca_tmp.path }}/{{ openvpn_filename_key_ca }}'
+    csr_path: '{{ ca_tmp.path }}/{{ openvpn_filename_csr }}'
     state: present
-    provider: selfsigned
-    signature_algorithms:
-      - sha1WithRSAEncryption
+    provider: ownca
+    ownca_digest: sha1
   delegate_to: localhost
+  when: not client_crt.stat.exists
 
-- name: Upload OpenVPN certificate
-  win_copy:
-    src: '{{ openvpn_store_path }}/{{ openvpn_filename_cert }}'
-    dest: '{{ openvpn_win_config_root }}\\{{ openvpn_filename_cert }}'
-  when: ansible_os_family == 'Windows'
+- name: Fix OpenVPN client private key line endings
+  command: 'unix2dos {{ ca_tmp.path }}/{{ openvpn_filename_key }}'
+  delegate_to: localhost
+  when: not client_key.stat.exists
 
-- name: Upload OpenVPN CA certificate
+- name: Upload OpenVPN client private key
   win_copy:
-    src: '{{ openvpn_store_path }}/{{ openvpn_filename_cert_ca }}'
-    dest: '{{ openvpn_win_config_root }}\\{{ openvpn_filename_cert_ca }}'
-  when: ansible_os_family == 'Windows'
-
-- name: Upload OpenVPN private key
-  win_copy:
-    src: '{{ openvpn_store_path }}/{{ openvpn_filename_key }}'
+    src: '{{ ca_tmp.path }}/{{ openvpn_filename_key }}'
     dest: '{{ openvpn_win_config_root }}\\{{ openvpn_filename_key }}'
-  when: ansible_os_family == 'Windows'
+  when: not client_key.stat.exists
+
+- name: Fix OpenVPN client certificate format
+  command: 'openssl x509 -in {{ ca_tmp.path }}/{{ openvpn_filename_cert }}.temp.crt -text -out {{ ca_tmp.path }}/{{ openvpn_filename_cert }}'
+  delegate_to: localhost
+  when: not client_crt.stat.exists
+
+- name: Fix OpenVPN client certificate line endings
+  command: 'unix2dos {{ ca_tmp.path }}/{{ openvpn_filename_cert }}'
+  delegate_to: localhost
+  when: not client_crt.stat.exists
+
+- name: Upload OpenVPN client certificate
+  win_copy:
+    src: '{{ ca_tmp.path }}/{{ openvpn_filename_cert }}'
+    dest: '{{ openvpn_win_config_root }}\\{{ openvpn_filename_cert }}'
+  when: not client_crt.stat.exists
+
+- name: Fix OpenVPN TLS auth key line endings
+  command: 'unix2dos {{ ca_tmp.path }}/{{ openvpn_filename_ta }}'
+  delegate_to: localhost
 
 - name: Upload OpenVPN TLS auth key
   win_copy:
-    src: '{{ openvpn_store_path }}/{{ openvpn_tls_auth_file }}'
-    dest: '{{ openvpn_win_config_root }}\\{{ openvpn_tls_auth_file }}'
-  when: ansible_os_family == 'Windows'
+    src: '{{ ca_tmp.path }}/{{ openvpn_filename_ta }}'
+    dest: '{{ openvpn_win_config_root }}\\{{ openvpn_filename_ta }}'
+  when: openvpn_filename_ta is defined
+
+- name: Fix OpenVPN CA certificate line endings
+  command: 'unix2dos {{ ca_tmp.path }}/{{ openvpn_filename_cert_ca }}'
+  delegate_to: localhost
+
+- name: Upload OpenVPN CA certificate
+  win_copy:
+    src: '{{ ca_tmp.path }}/{{ openvpn_filename_cert_ca }}'
+    dest: '{{ openvpn_win_config_root }}\\{{ openvpn_filename_cert_ca }}'
 
 - name: Upload OpenVPN config
   win_template:
     src: 'templates/client.conf.j2'
     dest: '{{ openvpn_win_config_root }}\\{{ openvpn_network_name }}.ovpn'
-  when: ansible_os_family == 'Windows'
 
