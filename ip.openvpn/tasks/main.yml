@@ -1,38 +1,20 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
-# tasks file for ip.openvpn
 
-- name: Check for OpenVPN installation
-  win_reg_stat:
-    path: HKLM:\SOFTWARE\OpenVPN
-  register: reg_openvpn
-  when: ansible_os_family == 'Windows'
+- include_tasks: client-windows.yml
+  when:
+    - openvpn_role is defined
+    - openvpn_role == 'client'
+    - ansible_os_family == 'Windows'
 
-- name: Upload OpenVPN installer
-  win_copy:
-    src: '{{ installer_src }}/{{ openvpn_installer }}'
-    dest: '{{ installer_temp }}\\{{ openvpn_installer }}'
-  when: ansible_os_family == 'Windows' and not reg_openvpn.exists
-
-- name: Run OpenVPN installer
-  win_command: '{{ installer_temp }}\\{{ openvpn_installer }} /S'
-  when: ansible_os_family == 'Windows' and not reg_openvpn.exists
-
-- name: Cleanup OpenVPN installer
-  win_file:
-    path: '{{ installer_temp }}\\{{ openvpn_installer }}'
-    state: absent
-
-- name: Generate OpenVPN CSR
-  openssl_csr:
-    path: "{{ openvpn_store_path }}/{{ openvpn_node_name + '.' + (ansible_os_family | lower) if openssl_node_has_os else openvpn_node_name }}.csr"
-    common_name: "{{ openvpn_node_name + '.' + (ansible_os_family | lower) if openssl_node_has_os else openvpn_node_name }}"
-    common_name: '{{ openvpn_node_name }}'
-    country_name: '{{ openvpn_country }}'
-    locality_name: '{{ openvpn_locality }}'
-    state_or_province_name: '{{ openvpn_state_or_province }}'
-    organization_name: '{{ openvpn_organization }}'
-    email_address: '{{ openvpn_email_address }}'
-    digest: sha256
-  delegate_to: localhost
+- name: Upload OpenVPN certificates to server
+  synchronize:
+    src: '{{ openvpn_store_path }}/'
+    dest: '{{ openvpn_server_keys_dir }}/'
+    rsync_opts:
+      - '--include=*.crt'
+      - '--exclude=*'
+  when:
+    - openvpn_role is defined
+    - openvpn_role == 'server'
 
