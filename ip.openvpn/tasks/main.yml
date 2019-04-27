@@ -1,20 +1,38 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
+- name: Create temporary CA directory
+  tempfile:
+    state: directory
+    suffix: ovpn
+  register: ca_tmp
+  delegate_to: localhost
+
+- name: Decrypt CA private files to {{ ca_tmp.path }}
+  copy:
+    content: "{{ item.value }}\n"
+    dest: '{{ ca_tmp.path }}/{{ item.key }}'
+  delegate_to: localhost
+  with_dict: '{{ openvpn_ca_files }}'
+  no_log: true
+
 - include_tasks: client-windows.yml
   when:
     - openvpn_role is defined
     - openvpn_role == 'client'
     - ansible_os_family == 'Windows'
 
-- name: Upload OpenVPN certificates to server
-  synchronize:
-    src: '{{ openvpn_store_path }}/'
-    dest: '{{ openvpn_server_keys_dir }}/'
-    rsync_opts:
-      - '--include=*.crt'
-      - '--exclude=*'
-  when:
-    - openvpn_role is defined
-    - openvpn_role == 'server'
+- name: Cleanup extracted temporary keys from {{ ca_tmp.path }}
+  file:
+    path: '{{ item }}'
+    state: absent
+  delegate_to: localhost
+  with_items:
+    - '{{ ca_tmp.path }}/{{ openvpn_filename_key_ca }}'
+    - '{{ ca_tmp.path }}/{{ openvpn_filename_cert_ca }}'
+    - '{{ ca_tmp.path }}/{{ openvpn_filename_csr }}'
+    - '{{ ca_tmp.path }}/{{ openvpn_filename_key }}'
+    - '{{ ca_tmp.path }}/{{ openvpn_filename_cert }}'
+    - '{{ ca_tmp.path }}/{{ openvpn_filename_ta }}'
+    - '{{ ca_tmp.path }}'
 

@@ -6,8 +6,8 @@ resolv-retry            infinite
 cipher                  {{ openvpn_cipher }}
 auth			{{ openvpn_auth }}
 ns-cert-type            server
-{% if openvpn_tls_auth_file is defined %}
-tls-auth                {{ openvpn_tls_auth_file }} {{ openvpn_tls_auth_client_dir }}
+{% if openvpn_filename_ta is defined %}
+tls-auth                {{ openvpn_filename_ta }} {{ openvpn_tls_auth_client_dir }}
 {% endif %}
 float
 nobind
