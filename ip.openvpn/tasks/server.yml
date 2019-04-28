@@ -1,0 +1,23 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Create local OpenVPN static config directory
+  file:
+    path: '{{ ca_tmp.path }}/static'
+    state: directory
+  delegate_to: localhost
+
+- name: Create OpenVPN static files
+  template:
+    src: 'templates/static.j2'
+    dest: '{{ ca_tmp.path }}/static/{{ static.key }}'
+  with_dict: '{{ openvpn_static }}'
+  delegate_to: localhost
+  loop_control:
+    loop_var: static
+
+- name: Upload OpenVPN certificates to server
+  synchronize:
+    src: '{{ ca_tmp.path }}/static/'
+    dest: '{{ openvpn_server_static_path }}/'
+

@@ -9,7 +9,7 @@
   delegate_to: localhost
   changed_when: false
 
-- name: Decrypt CA private files to {{ ca_tmp.path }}
+- name: Decrypt CA private files
   copy:
     content: "{{ item.value }}\n"
     dest: '{{ ca_tmp.path }}/{{ item.key }}'
@@ -17,6 +17,14 @@
   with_dict: '{{ openvpn_ca_files }}'
   no_log: true
   changed_when: false
+  when:
+    - openvpn_role is defined
+    - openvpn_role == 'client'
+
+- include_tasks: server.yml
+  when:
+    - openvpn_role is defined
+    - openvpn_role == 'server'
 
 - include_tasks: client-windows.yml
   when:
