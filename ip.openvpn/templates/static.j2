@@ -1,0 +1,12 @@
+ifconfig-push {{ static.value.ipv4[0] }} {{ static.value.ipv4[1] }}
+{% if static.value.ipv6 is defined %}
+ifconfig-ipv6-push {{ static.value.ipv6 }}
+{% endif %}
+{% if static.value.dhcp is defined %}
+{% for dhcp_key, dhcp_value in static.value.dhcp.items() %}
+push "dhcp-option {{ dhcp_key }} {{ dhcp_value }}"
+{% endfor %}
+{% endif %}
+{% if static.value.route is defined %}
+push "route {{ static.value.route.network }} {{ static.value.route.netmask }} {{ static.value.route.gateway }} {{ static.value.route.metric }}"
+{% endif %}
