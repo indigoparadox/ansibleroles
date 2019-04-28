@@ -1,0 +1,41 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Generate OpenVPN client private key
+  openssl_privatekey:
+    path: '{{ ca_tmp.path }}/{{ openvpn_filename_key }}'
+    size: '{{ openvpn_private_key_size }}'
+  delegate_to: localhost
+  when: not client_key.stat.exists
+
+- name: Generate OpenVPN client certificate request
+  openssl_csr:
+    path: '{{ ca_tmp.path }}/{{ openvpn_filename_csr }}'
+    privatekey_path: '{{ ca_tmp.path }}/{{ openvpn_filename_key }}'
+    common_name: "{{ openvpn_node_name + '.' + (ansible_os_family | lower) if openssl_node_has_os else openvpn_node_name }}"
+    country_name: '{{ openvpn_country }}'
+    locality_name: '{{ openvpn_locality }}'
+    state_or_province_name: '{{ openvpn_state_or_province }}'
+    organization_name: '{{ openvpn_organization }}'
+    email_address: '{{ openvpn_email_address }}'
+    key_usage:
+      - digitalSignature
+    extended_key_usage:
+      - clientAuth
+    basic_constraints:
+      - 'CA:FALSE'
+  delegate_to: localhost
+  when: not client_crt.stat.exists
+
+- name: Generate OpenVPN client certificate
+  openssl_certificate:
+    path: '{{ ca_tmp.path }}/{{ openvpn_filename_cert }}.temp.crt'
+    ownca_path: '{{ ca_tmp.path }}/{{ openvpn_filename_cert_ca }}'
+    ownca_privatekey_path: '{{ ca_tmp.path }}/{{ openvpn_filename_key_ca }}'
+    csr_path: '{{ ca_tmp.path }}/{{ openvpn_filename_csr }}'
+    state: present
+    provider: ownca
+    ownca_digest: '{{ openvpn_ca_digest }}'
+  delegate_to: localhost
+  when: not client_crt.stat.exists
+

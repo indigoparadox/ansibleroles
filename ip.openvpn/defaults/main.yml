@@ -4,14 +4,15 @@
 
 openvpn_node_name: '{{ inventory_hostname.split(".")[0] }}'
 openvpn_win_install_root: 'C:\\Program Files\\OpenVPN'
-openvpn_win_config_root: '{{ openvpn_win_install_root }}\\config'
+openvpn_config_root: "{{ '/usr/local/etc/openvpn' if ansible_os_family == 'FreeBSD' else openvpn_win_install_root + '\\config' if ansible_os_family == 'Windows' else '/etc/openvpn' }}"
 openvpn_dev: tun
 openvpn_proto: udp
 openvpn_cipher: AES-256-CBC
 openvpn_auth: SHA256
-openvpn_filename_cert: "{{ openvpn_node_name + '.' + (ansible_os_family | lower) if openssl_node_has_os else openvpn_node_name }}.crt"
-openvpn_filename_csr: "{{ openvpn_node_name + '.' + (ansible_os_family | lower) if openssl_node_has_os else openvpn_node_name }}.csr"
-openvpn_filename_key: "{{ openvpn_node_name + '.' + (ansible_os_family | lower) if openssl_node_has_os else openvpn_node_name }}.key"
-openvpn_filename_cert_ca: ca.crt
-openvpn_filename_key_ca: ca.key
+openvpn_filename_cert: "{{ openvpn_network_name }}.{{ openvpn_node_name + '.' + (ansible_os_family | lower) if openssl_node_has_os else openvpn_node_name }}.crt"
+openvpn_filename_csr: "{{ openvpn_network_name }}.{{ openvpn_node_name + '.' + (ansible_os_family | lower) if openssl_node_has_os else openvpn_node_name }}.csr"
+openvpn_filename_key: "{{ openvpn_network_name }}.{{ openvpn_node_name + '.' + (ansible_os_family | lower) if openssl_node_has_os else openvpn_node_name }}.key"
+openvpn_filename_cert_ca: '{{ openvpn_network_name }}.ca.crt'
+openvpn_filename_key_ca: '{{ openvpn_network_name }}.ca.key'
+openssl_node_has_os: false
 

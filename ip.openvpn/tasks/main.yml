@@ -4,8 +4,9 @@
 - name: Create temporary CA directory
   tempfile:
     state: directory
-    suffix: ovpn
+    suffix: .ovpn
   register: ca_tmp
+  become: false
   delegate_to: localhost
   changed_when: false
   when:
@@ -17,6 +18,7 @@
     content: "{{ item.value }}\n"
     dest: '{{ ca_tmp.path }}/{{ item.key }}'
   delegate_to: localhost
+  become: false
   with_dict: '{{ openvpn_ca_files }}'
   no_log: true
   changed_when: false
@@ -34,6 +36,15 @@
     - openvpn_role is defined
     - openvpn_role == 'client'
     - ansible_os_family == 'Windows'
+
+- include_tasks: client-unix.yml
+  when:
+    - openvpn_role is defined
+    - openvpn_role == 'client'
+    - ansible_os_family == 'Debian' or
+      ansible_os_family == 'Kali GNU/Linux' or
+      ansible_os_family == 'Fedora' or
+      ansible_os_family == 'FreeBSD'
 
 - name: Cleanup extracted temporary keys from {{ ca_tmp.path }}
   file:

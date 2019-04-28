@@ -35,51 +35,15 @@
 
 - name: Check for OpenVPN client private key
   win_stat:
-    path: '{{ openvpn_win_config_root }}\\{{ openvpn_filename_key }}'
+    path: '{{ openvpn_config_root }}\\{{ openvpn_filename_key }}'
   register: client_key
 
 - name: Check for OpenVPN client certificate
   win_stat:
-    path: '{{ openvpn_win_config_root }}\\{{ openvpn_filename_cert }}'
+    path: '{{ openvpn_config_root }}\\{{ openvpn_filename_cert }}'
   register: client_crt
 
-- name: Generate OpenVPN client private key
-  openssl_privatekey:
-    path: '{{ ca_tmp.path }}/{{ openvpn_filename_key }}'
-    size: '{{ openvpn_private_key_size }}'
-  delegate_to: localhost
-  when: not client_key.stat.exists
-
-- name: Generate OpenVPN client certificate request
-  openssl_csr:
-    path: '{{ ca_tmp.path }}/{{ openvpn_filename_csr }}'
-    privatekey_path: '{{ ca_tmp.path }}/{{ openvpn_filename_key }}'
-    common_name: "{{ openvpn_node_name + '.' + (ansible_os_family | lower) if openssl_node_has_os else openvpn_node_name }}"
-    country_name: '{{ openvpn_country }}'
-    locality_name: '{{ openvpn_locality }}'
-    state_or_province_name: '{{ openvpn_state_or_province }}'
-    organization_name: '{{ openvpn_organization }}'
-    email_address: '{{ openvpn_email_address }}'
-    key_usage:
-      - digitalSignature
-    extended_key_usage:
-      - clientAuth
-    basic_constraints:
-      - 'CA:FALSE'
-  delegate_to: localhost
-  when: not client_crt.stat.exists
-
-- name: Generate OpenVPN client certificate
-  openssl_certificate:
-    path: '{{ ca_tmp.path }}/{{ openvpn_filename_cert }}.temp.crt'
-    ownca_path: '{{ ca_tmp.path }}/{{ openvpn_filename_cert_ca }}'
-    ownca_privatekey_path: '{{ ca_tmp.path }}/{{ openvpn_filename_key_ca }}'
-    csr_path: '{{ ca_tmp.path }}/{{ openvpn_filename_csr }}'
-    state: present
-    provider: ownca
-    ownca_digest: '{{ openvpn_ca_digest }}'
-  delegate_to: localhost
-  when: not client_crt.stat.exists
+- include_tasks: generate.yml
 
 - name: Fix OpenVPN client private key line endings
   command: 'unix2dos {{ ca_tmp.path }}/{{ openvpn_filename_key }}'
@@ -89,7 +53,7 @@
 - name: Upload OpenVPN client private key
   win_copy:
     src: '{{ ca_tmp.path }}/{{ openvpn_filename_key }}'
-    dest: '{{ openvpn_win_config_root }}\\{{ openvpn_filename_key }}'
+    dest: '{{ openvpn_config_root }}\\{{ openvpn_filename_key }}'
   when: not client_key.stat.exists
 
 - name: Fix OpenVPN client certificate format
@@ -105,7 +69,7 @@
 - name: Upload OpenVPN client certificate
   win_copy:
     src: '{{ ca_tmp.path }}/{{ openvpn_filename_cert }}'
-    dest: '{{ openvpn_win_config_root }}\\{{ openvpn_filename_cert }}'
+    dest: '{{ openvpn_config_root }}\\{{ openvpn_filename_cert }}'
   when: not client_crt.stat.exists
 
 - name: Fix OpenVPN TLS auth key line endings
@@ -116,7 +80,7 @@
 - name: Upload OpenVPN TLS auth key
   win_copy:
     src: '{{ ca_tmp.path }}/{{ openvpn_filename_ta }}'
-    dest: '{{ openvpn_win_config_root }}\\{{ openvpn_filename_ta }}'
+    dest: '{{ openvpn_config_root }}\\{{ openvpn_filename_ta }}'
   when: openvpn_filename_ta is defined
 
 - name: Fix OpenVPN CA certificate line endings
@@ -127,12 +91,12 @@
 - name: Upload OpenVPN CA certificate
   win_copy:
     src: '{{ ca_tmp.path }}/{{ openvpn_filename_cert_ca }}'
-    dest: '{{ openvpn_win_config_root }}\\{{ openvpn_filename_cert_ca }}'
+    dest: '{{ openvpn_config_root }}\\{{ openvpn_filename_cert_ca }}'
 
 - name: Upload OpenVPN config
   win_template:
     src: 'templates/client.conf.j2'
-    dest: '{{ openvpn_win_config_root }}\\{{ openvpn_network_name }}.ovpn'
+    dest: '{{ openvpn_config_root }}\\{{ openvpn_network_name }}.ovpn'
 
 - name: Enable VPN service
   win_service:
