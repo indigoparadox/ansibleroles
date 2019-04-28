@@ -8,6 +8,9 @@
   register: ca_tmp
   delegate_to: localhost
   changed_when: false
+  when:
+    - openvpn_role is defined
+    - openvpn_role == 'client'
 
 - name: Decrypt CA private files
   copy:
@@ -46,4 +49,7 @@
     - '{{ ca_tmp.path }}/{{ openvpn_filename_ta }}'
     - '{{ ca_tmp.path }}'
   changed_when: false
+  when:
+    - openvpn_role is defined
+    - openvpn_role == 'client'
 
