@@ -1,0 +1,74 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+#
+- name: Check for OpenVPN installation
+  package:
+    name: openvpn
+    state: present
+
+- name: Check for OpenVPN client private key
+  stat:
+    path: '{{ openvpn_config_root }}/{{ openvpn_filename_key }}'
+  register: client_key
+
+- name: Check for OpenVPN client certificate
+  stat:
+    path: '{{ openvpn_config_root }}/{{ openvpn_filename_cert }}'
+  register: client_crt
+
+- include_tasks: generate.yml
+
+- name: Upload OpenVPN client private key
+  copy:
+    src: '{{ ca_tmp.path }}/{{ openvpn_filename_key }}'
+    dest: '{{ openvpn_config_root }}/{{ openvpn_filename_key }}'
+  register: upload_key
+  when: not client_key.stat.exists
+
+- name: Fix OpenVPN client certificate format
+  command: 'openssl x509 -in {{ ca_tmp.path }}/{{ openvpn_filename_cert }}.temp.crt -text -out {{ ca_tmp.path }}/{{ openvpn_filename_cert }}'
+  delegate_to: localhost
+  when: not client_crt.stat.exists
+
+- name: Upload OpenVPN client certificate
+  copy:
+    src: '{{ ca_tmp.path }}/{{ openvpn_filename_cert }}'
+    dest: '{{ openvpn_config_root }}/{{ openvpn_filename_cert }}'
+  register: upload_crt
+  when: not client_crt.stat.exists
+
+- name: Upload OpenVPN TLS auth key
+  copy:
+    src: '{{ ca_tmp.path }}/{{ openvpn_filename_ta }}'
+    dest: '{{ openvpn_config_root }}/{{ openvpn_filename_ta }}'
+  register: upload_tls
+  when: openvpn_filename_ta is defined
+
+- name: Upload OpenVPN CA certificate
+  copy:
+    src: '{{ ca_tmp.path }}/{{ openvpn_filename_cert_ca }}'
+    dest: '{{ openvpn_config_root }}/{{ openvpn_filename_cert_ca }}'
+  register: upload_ca_crt
+
+- name: Upload OpenVPN config
+  template:
+    src: 'templates/client.conf.j2'
+    dest: '{{ openvpn_config_root }}/{{ openvpn_network_name }}.conf'
+  register: upload_config
+
+- name: Enable VPN service
+  service:
+    name: openvpn
+    state: started
+    enabled: true
+
+- name: Restart VPN service
+  service:
+    name: openvpn
+    state: restarted
+  when: upload_ca_crt.changed or
+    upload_crt.changed or
+    upload_config.changed or
+    upload_key.changed or
+    upload_tls.changed
+
