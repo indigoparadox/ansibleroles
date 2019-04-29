@@ -12,10 +12,10 @@
     body_format: json
     force_basic_auth: yes
     validate_certs: False
-  when:
-    - not ssl_crt_remote.stat.exists or
-      ssl_valid_remote.failed or
-      not ssl_key_remote.stat.exists
+  #when:
+  #  - not ssl_crt_remote.stat.exists or
+  #    ssl_valid_remote.failed or
+  #    not ssl_key_remote.stat.exists
   delegate_to: localhost
   register: ssl_inventory
   no_log: true
@@ -30,6 +30,7 @@
     - not ssl_crt_remote.stat.exists or ssl_valid_remote.failed
   with_items:
   - '{{ ssl_inventory.json }}'
+  no_log: true
 
 - name: Upload existing SSL private key (FreeNAS)
   copy:
@@ -41,4 +42,5 @@
     - not ssl_key_remote.stat.exists
   with_items:
   - '{{ ssl_inventory.json }}'
+  no_log: true
 
