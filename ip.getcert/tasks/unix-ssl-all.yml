@@ -6,6 +6,11 @@
     path: '{{ cert_path }}'
   register: ssl_crt_remote
 
+- name: Check whether SSL certificate request exists
+  stat: 
+    path: '{{ csr_path }}'
+  register: ssl_csr_remote
+
 - name: Check whether SSL private key exists
   stat: 
     path: '{{ privkey_path }}'

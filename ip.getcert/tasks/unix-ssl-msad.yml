@@ -30,7 +30,7 @@
     subject_alt_name:
       - 'DNS:{{ common_name }}'
   register: msad_csr
-  when: not ssl_crt_remote.stat.exists or ssl_valid_remote.failed
+  when: not ssl_csr_remote.stat.exists
 
 - name: Submit certificate signing request (MSAD)
   uri:
@@ -39,7 +39,7 @@
     password: '{{ getcert_msad_password }}'
     force_basic_auth: yes
     headers: '{{ getcert_msad_ssl_headers }}'
-    body: "Mode=newreq&CertRequest={{ lookup('file', msad_csr.filename) | regex_replace('\\r|\\n', '') | regex_replace( '\\+', '%2B' ) | regex_replace( ' ', '+' ) }}&CertAttrib=CertificateTemplate:{{ getcert_msad_template }}%0D%0A&TargetStoreFlags=0&SaveCert=yes&ThumbPrint="
+    body: "Mode=newreq&CertRequest={{ lookup('file', csr_path) | regex_replace('\\r|\\n', '') | regex_replace( '\\+', '%2B' ) | regex_replace( ' ', '+' ) }}&CertAttrib=CertificateTemplate:{{ getcert_msad_template }}%0D%0A&TargetStoreFlags=0&SaveCert=yes&ThumbPrint="
     return_content: yes
   register: msad_certrqxt
   when: msad_csr.changed or not ssl_crt_remote.stat.exists
