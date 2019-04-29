@@ -1,8 +1,8 @@
 server {{ '{' }}
 {% if site.ssl is defined %}
-  listen {% item.ip + ':' if item.ip is defined %}{{ site.port | default('443') }};
+  listen {{ site.ip + ':' if site.ip is defined else '' }}{{ site.port | default('443') }};
 {% else %}
-  listen {% item.ip + ':' if item.ip is defined %}{{ site.port | default('80') }};
+  listen {{ site.ip + ':' if site.ip is defined else '' }}{{ site.port | default('80') }};
 {% endif %}
   server_name {{ site.server_name | default(inventory_hostname) }};
 
@@ -16,7 +16,7 @@ server {{ '{' }}
   ssl_certificate_key {{ webvhost_ssl_path }}/{{ site.server_name | default(inventory_hostname) }}.pem;
 {% endif %}
   ssl_session_cache shared:SSL:1m;
-  ssl_session_timeout {{ item.ssl_timeout | default webvhost_ssl_timeout }};
+  ssl_session_timeout {{ site.ssl_timeout | default(webvhost_ssl_timeout) }};
 
 {% endif %}
 {% if site.document_root is defined %}
