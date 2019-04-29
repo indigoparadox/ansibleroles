@@ -1,0 +1,23 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+# defaults file for ip.smb
+
+smb_security: ads
+smb_max_protocol: SMB2
+smb_server_string: Network authenticated file server
+smb_guest_account: nobody
+smb_guest_map: bad user
+smb_log_file: /var/log/samba4/log.%m
+smb_log_level: 3
+smb_log_max_size: 5000
+smb_dns_proxy: 'no'
+smb_hide_files:
+  - desktop.ini
+smb_veto_files:
+  - .Trash-1000
+  - .fuse_hidden*
+smb_kerberos_method: system keytab
+smb_allow_execute_always: 'yes'
+smb_nmbd_bind_explicit_bc: 'no'
+smb_wide_links: 'no'
+

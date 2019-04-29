@@ -1,0 +1,56 @@
+{% if comment_header is defined %}
+{{ comment_header | comment('plain') }}
+{% endif %}
+[global]
+   server max protocol = {{ smb_max_protocol }}
+   workgroup = {{ smb_workgroup | upper }}
+   netbios name = {{ inventory_hostname.split(".")[0] | upper }}
+   server string = {{ smb_server_string }}
+   security = {{ smb_security }}
+{% if smb_hosts_allow is defined %}
+   hosts allow = {{ smb_hosts_allow | join(' ') }}
+{% endif %}
+{% if smb_security == 'ads' %}
+   realm = {{ smb_realm }}
+   kerberos method = {{ smb_kerberos_method }}
+   username map = /usr/local/etc/smbusers
+   winbind enum users = yes
+   winbind enum groups = yes
+{% endif %}
+   guest account = {{ smb_guest_account }}
+   map to guest = {{ smb_guest_map }}
+   log file = {{ smb_log_file }}
+   log level = {{ smb_log_level }}
+   max log size = {{ smb_log_max_size }}
+{% if smb_interfaces is defined %}
+   interfaces = {{ smb_interfaces | join(' ') }}
+   bind interfaces only = yes
+{% endif %}
+   dns proxy = {{ smb_dns_proxy }}
+{% if smb_store_dos_attributes == 'yes' %}
+   store dos attributes = {{ smb_store_dos_attributes }}
+{% endif %}
+{% if smb_map_attrs is defined %}
+{% for key, val in smb_map %}
+   map {{ key }} = {{ val }}
+{% endfor %}
+{% endif %}
+   hide files = /{{ smb_hide_files | join('/') }}/
+   veto files = /{{ smb_veto_files | join('/') }}/
+   nmbd bind explicit broadcast = {{ smb_nmbd_bind_explicit_bc }}
+   wide links = {{ smb_wide_links }}
+   acl allow execute always = {{ smb_allow_execute_always }}
+
+{% for name, share in smb_shares.items() %}
+[{{ name }}]
+{% for key, val in share.items() %}
+{% if 'hide files' == key %}
+  {{ key }} = /{{ val | join('/') }}/
+{% elif 'veto files' == key %}
+  {{ key }} = /{{ val | join('/') }}/
+{% else %}
+  {{ key }} = {{ val }}
+{% endif %}
+{% endfor %}
+
+{% endfor %}
