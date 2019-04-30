@@ -25,8 +25,8 @@
 {% endif %}
 {% if site.ssl.stapling is defined and site.ssl.stapling %}
 	SSLUseStapling on
-	SSLStaplingResponderTimeout 5
-	SSLStaplingReturnResponderErrors off
+	SSLStaplingResponderTimeout {{ site.ssl.stapling_timeout | default(5) }}
+	SSLStaplingReturnResponderErrors {{ site.ssl.stapling_return_errors | default('off') }}
 {% endif %}
 {% if site.proxy_ssl is defined and site.proxy_ssl %}
 	SSLProxyEngine on
