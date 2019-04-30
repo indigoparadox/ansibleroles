@@ -1,6 +1,9 @@
 
 {% include 'auto_template.j2' %}
+{% if site.port is defined %}
+Listen {{ site.ip + ':' if site.ip is defined else '' }}{{ site.port }} {{ 'https' if site.ssl is defined else 'http' }}
 
+{% endif %}
 {% if site.ssl is defined %}
 <VirtualHost {{ site.ip | default('*') }}:{{ site.port | default('443') }}>
 {% else %}
