@@ -10,4 +10,3 @@
         ansible_os_family == 'FreeBSD' or
         ansible_os_family == 'Kali GNU/Linux'
 
-
