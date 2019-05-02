@@ -22,6 +22,7 @@
    log file = {{ smb_log_file }}
    log level = {{ smb_log_level }}
    max log size = {{ smb_log_max_size }}
+   syslog = {{ smb_syslog_level }}
 {% if smb_interfaces is defined %}
    interfaces = {{ smb_interfaces | join(' ') }}
    bind interfaces only = yes

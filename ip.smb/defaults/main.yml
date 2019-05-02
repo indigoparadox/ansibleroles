@@ -10,6 +10,7 @@ smb_guest_map: bad user
 smb_log_file: /var/log/samba4/log.%m
 smb_log_level: 3
 smb_log_max_size: 5000
+smb_syslog_level: 0
 smb_dns_proxy: 'no'
 smb_hide_files:
   - desktop.ini
