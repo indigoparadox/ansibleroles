@@ -1,5 +1,6 @@
 
 {% include 'auto_template.j2' %}
+{% import 'apache-util.conf.j2' as util %}
 {% if site.port is defined %}
 Listen {{ site.ip + ':' if site.ip is defined else '' }}{{ site.port }} {{ 'https' if site.ssl is defined else 'http' }}
 
@@ -45,18 +46,7 @@ Listen {{ site.ip + ':' if site.ip is defined else '' }}{{ site.port }} {{ 'http
 {% endfor %}
 
 {% endif %}
-{% if site.rewrites is defined %}
-	RewriteEngine On
-
-{% for rewrite in site.rewrites %}
-{% for condition in rewrite.conditions %}
-	RewriteCond {{ condition.test }} {{ condition.test_val }} {{ condition.options }}
-{% endfor %}
-	RewriteRule {{ rewrite.url }} {{ rewrite.dest }} {{ rewrite.options }}
-
-{% endfor %}
-{% endif %}
-{% if site.locations is defined %}
+{{ util.rewrite( site ) }}{% if site.locations is defined %}
 {% for location in site.locations %}
 {% include 'apache-location.conf.j2' %}
 

@@ -1,0 +1,14 @@
+{% macro rewrite( root ) %}
+{% if root.rewrites is defined %}
+	RewriteEngine On
+
+{% for rewrite in root.rewrites %}
+{% for condition in rewrite.conditions %}
+	RewriteCond {{ condition.test }} {{ condition.test_val }} {{ condition.options | default('') }}
+{% endfor %}
+{% for rule in rewrite.rules %}
+	RewriteRule {{ rule.url }} {{ rule.dest | default('-') }} {{ rule.options | default('') }}
+{% endfor %}
+
+{% endfor %}
+{% endif %}{% endmacro %}
