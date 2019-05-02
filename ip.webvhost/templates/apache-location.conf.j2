@@ -8,6 +8,11 @@
 	<Location {{ location.web_path }}>
 {% endif %}
 		Options {{ location.options | default(webvhost_directory_options) | join(' ') }}
+{% if location.allow_override is defined %}
+		AllowOverride {{ location.allow_override }}
+{% else %}
+		AllowOverride None
+{% endif %}
 
 {% if location.proxy_url is defined %}
 		ProxyPass {{ location.proxy_url }}
@@ -30,25 +35,29 @@
 		AuthName {{ location.auth_options.name }}
 {% endif %}
 		Require valid-user
-
 {% endif %}
 {% if location.auth_ips is defined %}
 {% for auth_ip in location.auth_ips %}
 		Require ip {{ auth_ip }}
 {% endfor %}
-
 {% endif %}
 {% if not location.auth_type is defined and not location.auth_ips is defined %}
 		Require all granted
-
-{% endif %}
-{% if location.allow_override is defined %}
-		AllowOverride {{ location.allow_override }}
-{% else %}
-		AllowOverride None
 {% endif %}
 
-{% if location.session_path is defined %}
+{% if location.env is defined %}
+{% for key, value in location.env.items() %}
+		SetEnv {{ key }} {{ value }}
+{% endfor %}
+
+{% endif %}
+{% if location.misc_directives is defined %}
+{% for directive, value in location.misc_directives.items() %}
+		{{ directive }} {{ value }}
+{% endfor %}
+
+{% endif %}
+{{ util.rewrite( location ) }}{% if location.session_path is defined %}
 		Session On
 		SessionCookieName session path={{ location.session_path }}
 

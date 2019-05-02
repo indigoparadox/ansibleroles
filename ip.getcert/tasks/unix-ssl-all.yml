@@ -4,16 +4,19 @@
 - name: Check whether SSL certificate exists
   stat: 
     path: '{{ cert_path }}'
+    get_checksum: true
   register: ssl_crt_remote
 
 - name: Check whether SSL certificate request exists
   stat: 
     path: '{{ csr_path }}'
+    get_checksum: true
   register: ssl_csr_remote
 
 - name: Check whether SSL private key exists
   stat: 
     path: '{{ privkey_path }}'
+    get_checksum: true
   register: ssl_key_remote
 
 - name: Check SSL certificate validity
