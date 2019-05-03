@@ -7,9 +7,7 @@ smb_max_protocol: SMB2
 smb_server_string: Network authenticated file server
 smb_guest_account: nobody
 smb_guest_map: bad user
-smb_log_file: /var/log/samba4/log.%m
 smb_log_level: 3
-smb_log_max_size: 5000
 smb_syslog_level: 0
 smb_dns_proxy: 'no'
 smb_hide_files:
@@ -21,4 +19,14 @@ smb_kerberos_method: system keytab
 smb_allow_execute_always: 'yes'
 smb_nmbd_bind_explicit_bc: 'no'
 smb_wide_links: 'no'
+smb_panic_action: /usr/share/samba/panic-action %d
+smb_role: standalone server
+smb_passdb_backend: tdbsam
+smb_obey_pam_restrictions: 'yes'
+smb_unix_password_sync: 'yes'
+smb_passwd_program: /usr/bin/passwd %u
+smb_passwd_chat: '*Enter\snew\s*\spassword:* %n\n *Retype\snew\s*\spassword:* %n\n *password\supdated\ssuccessfully* .'
+smb_pam_password_change: 'yes'
+smb_bind_interfaces_only: 'yes'
+smb_usershare_allow_guests: 'yes'
 
