@@ -34,7 +34,7 @@
     dest: /etc/shorewall/interfaces
   register: interfaces
   vars:
-    shorewall_interfaces: '{{ firewall_interfaces | default(firewall_interfaces_default) }}'
+    shorewall_interfaces: '{{ firewall_interfaces }}'
 
 # Firewall SNAT
 

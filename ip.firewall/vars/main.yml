@@ -34,7 +34,3 @@ firewall_policies_default:
     dest: "$FW"
     rule: REJECT
 
-firewall_interfaces_default:
-  - zone: lan
-    ifname: eth0
-
