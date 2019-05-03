@@ -1,0 +1,23 @@
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+{% for iface, config in debian_interfaces.items() %}
+# The primary network interface
+allow-hotplug {{ iface }}
+iface {{ iface }} inet {{ 'static' if config.ip is defined else 'manual' }}
+	address {{ config.ip }}
+	gateway {{ config.gateway }}
+{% if config.up is defined %}
+	up {{ config.up }}
+{% endif %}
+{% if config.down is defined %}
+	down {{ config.down }}
+{% endif %}
+
+{% endfor %}

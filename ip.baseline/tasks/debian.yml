@@ -1,0 +1,72 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Set hostname
+  copy:
+    content: "{{ inventory_hostname.split('.')[0] }}"
+    dest: /etc/hostname
+
+- name: Set network configuration
+  template:
+    src: templates/debian-interfaces.j2
+    dest: /etc/network/interfaces
+  when: debian_interfaces is defined
+
+- name: Prefer IPv4
+  lineinfile:
+    path: /etc/gai.conf
+    regexp: '^.?precedence ::ffff:0:0/96  100'
+    line: 'precedence ::ffff:0:0/96  100'
+
+#- name: Detect ssmtp package
+#  shell: dpkg-query -f '${binary:Package}\n' -W | grep -q 'ssmtp'
+#  register: package_ssmtp
+#  when: ansible_distribution == 'Debian'
+#  ignore_errors: true
+
+- name: Remove Old Debian Jessie Mainstream
+  apt_repository:
+    repo: '{{ item }}'
+    state: absent
+  when: ansible_distribution == 'Debian' and ansible_lsb.major_release|int == 8
+  loop:
+    - deb http://ftp.us.debian.org/debian/ jessie main
+    - deb-src http://ftp.us.debian.org/debian/ jessie main
+    - deb http://ftp.us.debian.org/debian/ jessie-updates main
+    - deb-src http://ftp.us.debian.org/debian/ jessie-updates main
+    - deb https://mirrors.kernel.org/debian/ stretch main nonfree
+    - deb-src https://mirrors.kernel.org/debian/ stretch main
+    - deb https://mirrors.kernel.org/debian/ stretch-updates main nonfree
+    - deb-src https://mirrors.kernel.org/debian/ stretch-updates main
+    - deb http://deb.debian.org/debian/ jessie-updates main contrib
+    - deb-src http://deb.debian.org/debian/ jessie-updates main contrib
+
+- name: Enable Debian Jessie LTS
+  apt_repository:
+    repo: '{{ item }}'
+    state: present
+  when: ansible_distribution == 'Debian' and ansible_lsb.major_release|int == 8
+  loop:
+    - deb http://deb.debian.org/debian/ jessie main contrib
+    - deb-src http://deb.debian.org/debian/ jessie main contrib
+    - deb http://security.debian.org/ jessie/updates main contrib
+    - deb-src http://security.debian.org/ jessie/updates main contrib
+
+- name: Update apt
+  apt:
+    update_cache: yes
+    cache_valid_time: 86400
+  when: ansible_distribution == 'Debian'
+
+- name: Install basic Linux packages
+  package:
+    name: '{{ item }}'
+    state: present
+  loop:
+    - mosh
+    - screen
+    - vim-nox
+    - zsh
+    - mercurial
+    - alpine
+
