@@ -14,6 +14,7 @@
       - python3-pexpect
       - policykit-1
       - packagekit
+      - libwbclient-sssd
   when:
     - ansible_os_family == 'Debian' or
       ansible_os_family == 'Kali GNU/Linux'
@@ -108,7 +109,6 @@
   register: krb_ticket
   changed_when: false
   ignore_errors: true
-  when: domain_status.rc == 255
  
 - name: Create kerberos ticket
   expect:
@@ -119,5 +119,6 @@
 
 - name: Join samba to domain
   shell: /bin/bash -c "/usr/bin/net ads join -k"
-  when: domain_status.rc == 255
+  when: (domain_status.rc is defined and domain_status.rc == 255) or 
+    (krb_ticket.rc is defined and krb_ticket.rc != 0)
  
