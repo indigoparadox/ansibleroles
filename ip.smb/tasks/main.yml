@@ -2,8 +2,11 @@
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 # tasks file for ip.smb
 
-- name: Upload configuration file
-  template:
-    src: templates/smb4.conf.j2
-    dest: /usr/local/etc/smb4-new.conf  
+- include: linux-domain.yml
+  when:
+    - smb_security == 'ads'
+    - ansible_os_family == 'Debian' or
+      ansible_os_family == 'RedHat' or
+      ansible_os_family == 'CentOS' or
+      ansible_os_family == 'Kali GNU/Linux'
 

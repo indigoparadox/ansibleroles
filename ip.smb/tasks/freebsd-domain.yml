@@ -1,0 +1,8 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Upload configuration file
+  template:
+    src: templates/smb4.conf.j2
+    dest: /usr/local/etc/smb4-new.conf  
+
