@@ -1,0 +1,23 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Install NTP client
+  package:
+    name: '{{ item }}'
+    state: present
+  loop:
+    - ntp
+    - ntpdate
+
+- name: Upload NTP config
+  template:
+    src: templates/ntp.conf.j2
+    dest: "{{ ntp_config_dir | default('/etc/ntp.conf') }}"
+  register: ntpconf
+
+- name: Restart NTP
+  service:
+    name: ntp
+    state: restarted
+  when: ntpconf.changed
+
