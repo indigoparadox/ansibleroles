@@ -4,4 +4,8 @@
 
 jailsetup_jails_group: freebsd_jails
 jailsetup_jails_root: '/mnt/tank/jails'
+jailsetup_cmd_warden:
+  command: '/usr/local/bin/warden list | /usr/bin/grep ^{{ hostvars[jail].jail_name }}.\*Running'
+jailsetup_cmd_jexec: '/usr/sbin/jexec'
+jailsetup_sshd_service: sshd
 
