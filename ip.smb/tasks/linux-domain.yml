@@ -67,13 +67,27 @@
   register: domain_status
   changed_when: false
   ignore_errors: true
- 
+
 - name: Join domain
   expect:
     command: /bin/bash -c '/usr/sbin/realm join {{ smb_domain_name }} --user={{ smb_domain_user }}'
     responses:
       Password.*: '{{ smb_domain_password }}'
   when: domain_status.rc != 0
+ 
+# For samba compatibility.
+- name: Disable SSSD machine password change
+  lineinfile:
+    path: /etc/sssd/sssd.conf
+    insertafter: 'krb5_realm = {{ smb_domain_name | upper }}'
+    line: ad_maximum_machine_account_password_age = 0
+  register: sssd_machine_pw_age
+
+- name: Restart sssd service
+  systemd:
+    name: sssd
+    state: restarted
+  when: sssd_machine_pw_age.changed
 
 - name: Upload samba configuration
   template:
