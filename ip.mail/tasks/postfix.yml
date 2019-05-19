@@ -1,0 +1,32 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+#- name: Install postfix MTA
+#  package:
+#    - name: postfix
+#      state: present
+
+- name: Add postfix service to startup
+  lineinfile:
+    path: /etc/rc.conf
+    regexp: '^postfix_enable=".*"'
+    line: 'postfix_enable="YES"'
+  register: rc_enabled
+  when: ansible_os_family == 'FreeBSD'
+
+- name: Upload postfix config
+  template:
+    src: 'templates/postfix-{{ item }}.j2'
+    dest: '{{ mail_config_dir }}/{{ item }}'
+    backup: True
+  register: conf_upload
+  with_items:
+    - main.cf
+    - master.cf
+ 
+- name: Restart postfix if applicable
+  service:
+    name: postfix
+    state: restarted
+  when: conf_upload.changed or rc_enabled.changed
+
