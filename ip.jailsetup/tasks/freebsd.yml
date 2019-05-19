@@ -21,74 +21,31 @@
 #  loop_control:
 #    loop_var: result
 
-- name: Setup alternative network interfaces
-  copy:
-    content: "{{ jail_interfaces[hostvars[item.0].jail_name][item.1] }}\n"
-    dest: '{{ jailsetup_jails_root }}/.{{ hostvars[item.0].jail_name }}.meta/vn_{{ item.1 }}'
-  with_nested:
-    - '{{ groups[jailsetup_jails_group] }}'
-    - ['epair', 'gw', 'ip', 'netmask']
+- include_tasks:
+    file: 'jail-net.yml'
+  vars:
+    jail_name: "{{ jail_inv.split('.')[0] }}"
+  loop_control:
+    loop_var: jail_inv
   when:
     - jail_interfaces is defined
-    - jail_interfaces[hostvars[item.0].jail_name] is defined
-
-- name: Set system default gateways
-  copy:
-    content: "{{ jail_interfaces[hostvars[jail_inv].jail_name].gw }}\n"
-    dest: '{{ jailsetup_jails_root }}/.{{ hostvars[jail_inv].jail_name }}.meta/defaultrouter-ipv4'
+    - jail_interfaces[jail_inv.split('.')[0]] is defined
   with_items: '{{ groups[jailsetup_jails_group] }}'
+
+- include_tasks:
+    file: 'jail-sshkey.yml'
+  vars:
+    jail_name: "{{ jail_inv.split('.')[0] }}"
   loop_control:
     loop_var: jail_inv
-  when:
-    - jail_interfaces is defined
-    - jail_interfaces[hostvars[jail_inv].jail_name] is defined
-
-- name: Set internal jail hostnames
-  copy:
-    content: "{{ jail_inv.split('.')[0] }}\n"
-    dest: '{{ jailsetup_jails_root }}/.{{ hostvars[jail_inv].jail_name }}.meta/host'
   with_items: '{{ groups[jailsetup_jails_group] }}'
-  loop_control:
-    loop_var: jail_inv
-
-- name: Enable alternative network interface post-start
-  lineinfile:
-    line: '{{ jailsetup_vn_script }} $JAILNAME {{ jail_interfaces[hostvars[jail_inv].jail_name].dmz }} poststart'
-    dest: '{{ jailsetup_jails_root }}/.{{ hostvars[jail_inv].jail_name }}.meta/jail-post-start'
-  with_items: '{{ jailsetup_jails_group }}'
-  loop_control:
-    loop_var: jail_inv
-  when:
-    - jail_interfaces is defined
-    - jail_interfaces[hostvars[jail_inv].jail_name] is defined
 
 - name: Set FreeBSD 11 Release
   lineinfile:
     regexp: 'url: "pkg\+http://pkg\.FreeBSD\.org/freebsd:11:x86:64/.*"'
     line: '  url: "pkg+http://pkg.FreeBSD.org/freebsd:11:x86:64/release_1",'
-    path: '{{ jailsetup_jails_root }}/{{ hostvars[item].jail_name }}/usr/local/etc/pkg/repos/FreeBSD.conf'
+    path: "{{ jailsetup_jails_root }}/{{ jail_inv.split('.')[0] }}/usr/local/etc/pkg/repos/FreeBSD.conf"
   with_items: '{{ groups[jailsetup_jails_group] }}'
-
-- name: Enable OpenSSH
-  lineinfile:
-    path: '{{ jailsetup_jails_root }}/{{ hostvars[item].jail_name }}/etc/rc.conf'
-    regexp: '^sshd_enable='
-    line: 'sshd_enable="YES"'
-  register: ssh_enable
-  with_items: '{{ groups[jailsetup_jails_group] }}'
-
-- name: Install SSH key
-  lineinfile:
-    path: '{{ jailsetup_jails_root }}/{{ hostvars[item].jail_name }}/root/.ssh/authorized_keys'
-    line: '{{ jailsetup_public_key }}'
-    create: yes
-  register: ssh_key
-  with_items: '{{ groups[jailsetup_jails_group] }}'
-
-- name: Restart OpenSSH service
-  command: '{{ jailsetup_cmd_jexec }} {{ hostvars[item.item].jail_name }} service {{ jailsetup_sshd_service }} restart'
-  with_items:
-    - '{{ ssh_enable.results }}'
-    - '{{ ssh_key.results }}'
-  when: item.changed or item.changed
+  loop_control:
+    loop_var: jail_inv
 
