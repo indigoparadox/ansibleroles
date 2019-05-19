@@ -53,7 +53,7 @@ inet_interfaces = {{ mail_inet_interfaces }}
 transport_maps = {{ mail_transport_maps }}
 {% endif %}
 {% if mail_relay_domains is defined %}
-relay_domains = {{ mail_relay_domains }}
+relay_domains = {{ mail_relay_domains | join( ', ' ) }}
 {% endif %}
 {% if mail_relay_recipient_maps is defined %}
 relay_recipient_maps = {{ mail_relay_recipient_maps }}
