@@ -1,0 +1,32 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+#- name: Install fetchmail
+#  package:
+#    - name: postfix
+#      state: present
+
+- name: Add fetchmail service to startup
+  lineinfile:
+    path: /etc/rc.conf
+    regexp: '^fetchmail_enable=".*"'
+    line: 'fetchmail_enable="YES"'
+  register: rc_enabled
+  when: ansible_os_family == 'FreeBSD'
+
+#- name: Upload fetchmail config
+#  template:
+#    src: 'templates/fetchmailrc.j2'
+#    dest: '{{ mail_config_dir }}/'
+#    backup: True
+#  register: conf_upload
+#  with_items:
+#    - main.cf
+#    - master.cf
+ 
+- name: Restart fetchmail if applicable
+  service:
+    name: fetchmail
+    state: restarted
+  when: conf_upload.changed or rc_enabled.changed
+

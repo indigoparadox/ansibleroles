@@ -10,3 +10,22 @@
       ansible_os_family == 'Kali GNU/Linux'
     - mail_mta == 'postfix'
 
+- include: fetchmail.yml
+  when:
+    - ansible_os_family == 'Debian' or
+      ansible_os_family == 'RedHat' or
+      ansible_os_family == 'FreeBSD' or
+      ansible_os_family == 'Kali GNU/Linux'
+    - mail_fetchmail_configs is defined
+
+- name: Upload mail aliases
+  template:
+    src: 'templates/aliases.j2'
+    dest: '{{ mail_aliases_path }}'
+    backup: True
+  register: aliases_upload
+
+- name: Process aliases
+  command: '{{ mail_aliases_command }}'
+  when: aliases_upload.changed
+ 

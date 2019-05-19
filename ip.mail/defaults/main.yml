@@ -16,11 +16,13 @@ mail_relay_restrictions:
   - defer_unauth_destination
 mail_hostname: '{{ inventory_hostname }}'
 mail_alias_maps: 'hash:/etc/aliases'
-mail_alias_database: '{{ mail_alias_maps }}'
+mail_alias_database: '{{ mail_alias_maps }}.db'
 mail_mydestination:
 mail_mailbox_size_limit: 0
 mail_recipient_delimiter: +
 mail_transport_maps: 'cdb:/etc/postfix/transport_maps'
 mail_relay_domains: '$mydestination, $transport_maps'
 mail_config_dir: /etc/postfix
+mail_aliases_command: /usr/bin/newaliases
+mail_aliases_path: /etc/mail/aliases
 
