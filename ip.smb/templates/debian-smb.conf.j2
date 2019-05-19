@@ -30,6 +30,9 @@
 {% if smb_domain_name is defined %}
    realm = {{ smb_domain_name | upper }}
 {% endif %}
+{% if smb_kerberos_method is defined %}
+   kerberos method = {{ smb_kerberos_method }}
+{% endif %}
 
 {% if smb_wins_server is defined %}
 # Windows Internet Name Serving Support Section:
@@ -68,6 +71,7 @@
 # This tells Samba to use a separate log file for each machine
 # that connects
    log file = {{ smb_log_file }}
+   log level = {{ smb_log_level }}
 
 # Cap the size of the individual log files (in KiB).
    max log size = {{ smb_log_max_size | default('5000') }}
@@ -88,6 +92,11 @@
 
 
 ####### Authentication #######
+
+{% if smb_security is defined %}
+   security = {{ smb_security }}
+
+{% endif %}
 
 # Server role. Defines in which mode Samba will operate. Possible
 # values are "standalone server", "member server", "classic primary
@@ -266,11 +275,11 @@
 [{{ name }}]
 {% for key, val in share.items() %}
 {% if 'hide files' == key %}
-  {{ key }} = /{{ val | join('/') }}/
+   {{ key }} = /{{ val | join('/') }}/
 {% elif 'veto files' == key %}
-  {{ key }} = /{{ val | join('/') }}/
+   {{ key }} = /{{ val | join('/') }}/
 {% else %}
-  {{ key }} = {{ val }}
+   {{ key }} = {{ val }}
 {% endif %}
 {% endfor %}
 
