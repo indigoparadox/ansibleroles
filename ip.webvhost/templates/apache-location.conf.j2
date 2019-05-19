@@ -1,5 +1,4 @@
 {% if location.local_path is defined %}
-{% set tagname = 'Location' %}
 {% if location.local_path != site.document_root %}
 	Alias {{ location.web_path }} {{ location.local_path }}
 {% endif %}
