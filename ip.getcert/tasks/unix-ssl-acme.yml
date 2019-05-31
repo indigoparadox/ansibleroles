@@ -1,13 +1,31 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
+# acme REQUIRES a document_root hosted by an active web server in order to
+# automatically validate the domain.
+
+# common_name:
+# csr_path:
+# privkey_path:
+# cert_path:
+# ca_cert_path:
+# document_root:
+
+- name: Load common variables
+  include_vars: common.yml
+
+- name: Load OS-specific variables
+  include_vars: '{{ item }}'
+  with_first_found:
+    - '{{ ansible_os_family }}.yml'
+    - default.yml
+
 - include_tasks: 'unix-ssl-all.yml'
 
 - name: Install certbot ACME client
   package:
-    name: certbot
+    name: '{{ getcert_certbot_pkg }}'
     state: present
-  when: getcert_pkg_certbot is defined and getcert_pkg_certbot
 
 - name: Create ACME group
   group:

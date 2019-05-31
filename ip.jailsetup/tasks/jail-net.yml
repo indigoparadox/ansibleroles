@@ -1,33 +1,38 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
-- name: Enable VIMAGE on jail
+- name: Enable VIMAGE on jail ({{ jail_name }})
   copy:
     content: ''
     dest: '{{ jailsetup_jails_root }}/.{{ jail_name }}.meta/vnet'
 
-- name: Setup jail DNS
+- name: Setup jail DNS ({{ jail_name }})
   copy:
     content: "nameserver {{ jail_interfaces[jail_name].dns }}\n"
     dest: '{{ jailsetup_jails_root }}/{{ jail_name }}/etc/resolv.conf'
 
-- name: Setup alternative network interfaces ({{ jail_name }})
+- name: Setup alternative network interface ({{ jail_name }})
   copy:
     content: "{{ jail_interfaces[jail_name][item] }}\n"
     dest: '{{ jailsetup_jails_root }}/.{{ jail_name }}.meta/vn_{{ item }}'
-  with_items: ['epair', 'gw', 'ip', 'netmask']
+  with_items: ['epair', 'gw', 'ip', 'netmask', 'mac']
   when: jail_interfaces[jail_name][item] is defined
 
-- name: Set system default gateways ({{ jail_name }})
+- name: Set jail default gateway ({{ jail_name }})
   copy:
     content: "{{ jail_interfaces[jail_name].gw }}\n"
     dest: '{{ jailsetup_jails_root }}/.{{ jail_name }}.meta/defaultrouter-ipv4'
   when: jail_interfaces[jail_name].gw is defined
 
-- name: Set internal jail hostnames ({{ jail_name }})
+- name: Set metadata jail hostname ({{ jail_name }})
   copy:
     content: "{{ jail_name }}\n"
     dest: '{{ jailsetup_jails_root }}/.{{ jail_name }}.meta/host'
+
+- name: Set internal jail hostname ({{ jail_name }})
+  copy:
+    content: "{{ jail_name }}\n"
+    dest: '{{ jailsetup_jails_root }}/{{ jail_name }}/etc/hostname'
 
 - name: Enable alternative network interface pre-start ({{ jail_name }})
   lineinfile:

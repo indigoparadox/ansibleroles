@@ -1,7 +1,7 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
-- name: Enable OpenSSH
+- name: Enable OpenSSH ({{ jail_name }})
   lineinfile:
     path: '{{ jailsetup_jails_root }}/{{ jail_name }}/etc/rc.conf'
     regexp: '^sshd_enable='
@@ -9,7 +9,7 @@
   register: ssh_enable
   with_items: '{{ groups[jailsetup_jails_group] }}'
 
-- name: Install SSH key
+- name: Install SSH key ({{ jail_name }})
   lineinfile:
     path: '{{ jailsetup_jails_root }}/{{ jail_name }}/root/.ssh/authorized_keys'
     line: '{{ jailsetup_public_key }}'
@@ -17,10 +17,11 @@
   register: ssh_key
   with_items: '{{ groups[jailsetup_jails_group] }}'
 
-- name: Restart OpenSSH service
-  command: '{{ jailsetup_cmd_jexec }} {{ jail_name }} service {{ jailsetup_sshd_service }} restart'
-  with_items:
-    - '{{ ssh_enable.results }}'
-    - '{{ ssh_key.results }}'
-  when: item.changed or item.changed
+# This always fails because jail isn't running anyway.
+#- name: Restart OpenSSH service ({{ jail_name }})
+#  command: '{{ jailsetup_cmd_jexec }} {{ jail_name }} service {{ jailsetup_sshd_service }} restart'
+#  with_items:
+#    - '{{ ssh_enable.results }}'
+#    - '{{ ssh_key.results }}'
+#  when: item.changed or item.changed
 
