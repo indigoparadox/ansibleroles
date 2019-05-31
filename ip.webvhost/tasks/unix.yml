@@ -3,7 +3,7 @@
 
 # Gather some facts, first.
 
-- name: Create features list.
+- name: Create features list
   set_fact:
     webvhost_features: {}
   no_log: true
@@ -67,7 +67,14 @@
 
 # Request SSL certificates.
 
-- include_role:
+- name: Load OS-specific getcert vars
+  include_vars: '{{ item }}'
+  with_first_found:
+    - '../../ip.getcert/vars/{{ ansible_os_family }}.yml'
+    - '../../ip.getcert/vars/default.yml'
+
+- name: Call getcert to create certificate
+  include_role:
     name: 'ip.getcert'
     tasks_from: 'unix-ssl-{{ site.ssl }}.yml'
     allow_duplicates: yes

@@ -1,0 +1,4 @@
+# {{ mail_aliases_path }}
+{% for alias_def in mail_aliases %}
+{{ alias_def.alias }}: {{ alias_def.user }}
+{% endfor %}

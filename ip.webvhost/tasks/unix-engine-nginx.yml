@@ -11,9 +11,17 @@
     backup: True
   register: vhost_upload
 
+- name: Enable nginx (FreeBSD)
+  lineinfile:
+    path: /etc/rc.conf
+    regexp: '^nginx_enable=".*"'
+    line: 'nginx_enable="YES"'
+  register: rc_enabled
+  when: ansible_os_family == 'FreeBSD'
+
 - name: Restart nginx
   service:
     name: nginx
     state: restarted
-  when: vhost_upload.changed
+  when: vhost_upload.changed or rc_enabled.changed
 

@@ -1,0 +1,11 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+getcert_le_home: '/var/lib/letsencrypt'
+getcert_certbot_pkg: py27-certbot
+getcert_ssl_path: '/usr/local/etc/ssl'
+getcert_le_dirs:
+  work: '{{ getcert_le_home }}/work'
+  config: '/usr/local/etc/letsencrypt'
+  logs: '{{ getcert_le_home }}/logs'
+

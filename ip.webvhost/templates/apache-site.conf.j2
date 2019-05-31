@@ -19,9 +19,9 @@ Listen {{ site.ip + ':' if site.ip is defined else '' }}{{ site.port }} {{ 'http
 {% if site.ssl is defined %}
 	SSLEngine on
 {% if site.ssl == 'acme' %}
-	SSLCertificateFile {{ webvhost_le_dirs.config }}/live/{{ site.server_name | default(inventory_hostname) }}/fullchain.pem
-	SSLCertificateKeyFile {{ webvhost_le_dirs.config }}/live/{{ site.server_name | default(inventory_hostname) }}/privkey.pem
-	#Include {{ webvhost_le_dirs.config }}/options-ssl-apache.conf
+	SSLCertificateFile {{ getcert_le_dirs.config }}/live/{{ site.server_name | default(inventory_hostname) }}/fullchain.pem
+	SSLCertificateKeyFile {{ getcert_le_dirs.config }}/live/{{ site.server_name | default(inventory_hostname) }}/privkey.pem
+	#Include {{ getcert_le_dirs.config }}/options-ssl-apache.conf
 {% else %}
 	SSLCertificateFile {{ webvhost_ssl_path }}/{{ site.server_name | default(inventory_hostname) }}.crt
 	SSLCertificateChainFile {{ webvhost_ssl_path }}/{{ site.server_name | default(inventory_hostname) }}.ca.crt

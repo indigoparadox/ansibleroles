@@ -9,8 +9,8 @@ server {{ '{' }}
 {% if site.ssl is defined %}
   ssl on;
 {% if site.ssl == 'acme' %}
-  ssl_certificate {{ webvhost_le_dirs.config }}/live/{{ site.server_name }}/fullchain.pem;
-  ssl_certificate_key {{ webvhost_le_dirs.config }}/live/{{ site.server_name }}/privkey.pem;
+  ssl_certificate {{ getcert_le_dirs.config }}/live/{{ site.server_name }}/fullchain.pem;
+  ssl_certificate_key {{ getcert_le_dirs.config }}/live/{{ site.server_name }}/privkey.pem;
 {% else %}
   ssl_certificate {{ webvhost_ssl_path }}/{{ site.server_name | default(inventory_hostname) }}.crt;
   ssl_certificate_key {{ webvhost_ssl_path }}/{{ site.server_name | default(inventory_hostname) }}.pem;

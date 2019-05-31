@@ -1,6 +1,21 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
+# common_name:
+# csr_path:
+# privkey_path:
+# cert_path:
+# ca_cert_path:
+
+- name: Load common variables
+  include_vars: common.yml
+
+- name: Load OS-specific variables
+  include_vars: '{{ item }}'
+  with_first_found:
+    - '{{ ansible_os_family }}.yml'
+    - default.yml
+
 - include_tasks: 'unix-ssl-all.yml'
 
 - name: Fetch SSL certificate inventory (FreeNAS)
@@ -12,10 +27,6 @@
     body_format: json
     force_basic_auth: yes
     validate_certs: False
-  #when:
-  #  - not ssl_crt_remote.stat.exists or
-  #    ssl_valid_remote.failed or
-  #    not ssl_key_remote.stat.exists
   delegate_to: localhost
   register: ssl_inventory
   no_log: true

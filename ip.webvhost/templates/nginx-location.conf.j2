@@ -6,6 +6,9 @@
 
 {% endif %}
 {% if location.local_path is defined %}
+{# Using alias here so that web_path doesn't get included. This brings the
+   resulting behavior more in line with other web servers, making it easier
+   to maintain portability in this role. #}
     alias {{ location.local_path }};
 
 {% endif %}
