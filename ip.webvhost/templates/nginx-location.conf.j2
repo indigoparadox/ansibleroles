@@ -19,5 +19,12 @@
     proxy_redirect      off;
     proxy_pass          {{ location.proxy_url }};
 {% endif %}
+{% if location.rewrites is defined %}
+{% for rewrite in location.rewrites %}
+{% for rule in rewrite.rules %}
+    rewrite {{ rule.url }} {{ rule.dest }};
+{% endfor %}
+{% endfor %}
+{% endif %}
   {{ '}' }}
 
