@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Open SSH connection as a given user, thus using their auth agent and configs.
+: ${ADDOPTS:="-2Ax"}
+: ${LOCAL:="kreator"}
+export SSH_AUTH_SOCK=$(find /tmp/ssh-* -type s -user ${LOCAL} -name agent* | tail -1)
+declare -a options=( $* )
+
+# Remove unwanted options.
+for (( i=0,fin=${#options[*]} ; i < fin ; i++ )); do
+   case ${options[$i]} in
+         (-a|-oClearAllForwardings=*)   unset options[$i]
+                                 ;;
+   esac
+done
+
+exec /bin/su ${LOCAL} -c "$(which ssh) ${ADDOPTS} ${options[*]}"

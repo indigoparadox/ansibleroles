@@ -18,6 +18,8 @@
     regexp: '^.?precedence ::ffff:0:0/96  100'
     line: 'precedence ::ffff:0:0/96  100'
 
+- include: autofs.yml
+
 #- name: Detect ssmtp package
 #  shell: dpkg-query -f '${binary:Package}\n' -W | grep -q 'ssmtp'
 #  register: package_ssmtp
@@ -58,6 +60,7 @@
     cache_valid_time: 86400
   when: ansible_distribution == 'Debian'
 
+# TODO: Pick tmux or screen.
 - name: Install basic Linux packages
   package:
     name: '{{ item }}'
