@@ -14,8 +14,8 @@
 
 - name: Upload automount ssh_user script
   template:
-    src: files/ssh_user
-    dest: /usr/local/bin/ssh_user
+    src: templates/ssh_user.j2
+    dest: '/usr/local/bin/ssh_user.{{ item }}'
     mode: 0755
   when: automounts is defined
   with_items: '{{ automounts_ssh_users }}'
