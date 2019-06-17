@@ -5,5 +5,5 @@
 {% else %}
 {% set type = mount.type %}
 {% endif %}
-{{ mount.name }} -fstype={{ type }},{{ mount.options }} {{ ':sshfs#' + mount.target if 'fuse' == type else mount.target }}
+{{ mount.name }} -fstype={{ type }},{{ mount.options }} {{ ':sshfs#' + mount.target if 'fuse' == type else ':' + mount.target }}
 {% endfor %}
