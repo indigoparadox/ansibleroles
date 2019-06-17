@@ -1,25 +1,19 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
-- name: Upload automount group definitions
-  template:
-    src: templates/auto.j2
-    dest: '/etc/auto.{{ group.group }}'
-    backup: true
-  when: automounts is defined
-  with_items:
-    - '{{ automounts }}'
-  loop_control:
-    loop_var: group
+#- name: Upload automount ssh_user script
+#  template:
+#    src: templates/ssh_user.j2
+#    dest: '/usr/local/bin/ssh_user.{{ item }}'
+#    mode: 0755
+#  when: automounts is defined
+#  with_items: '{{ automounts_ssh_users }}'
 
-- name: Upload automount ssh_user script
-  template:
-    src: templates/ssh_user.j2
-    dest: '/usr/local/bin/ssh_user.{{ item }}'
-    mode: 0755
-  when: automounts is defined
-  with_items: '{{ automounts_ssh_users }}'
-
+- name: Install autofs package
+  package:
+    name: autofs
+    state: present
+ 
 # TODO: This needs to do the actual mount as the user, for security.
 
 - name: Upload automount group definitions
@@ -32,4 +26,18 @@
     - '{{ automounts }}'
   loop_control:
     loop_var: group
+  register: autofs_groups
+
+- name: Upload automount groups master
+  template:
+    src: templates/auto.master.j2
+    dest: '/etc/auto.master'
+    backup: true
+  register: autofs_master
+
+- name: Restart autofs service
+  systemd:
+    name: autofs
+    state: restarted
+  when: autofs_groups.changed or autofs_master.changed
 

@@ -5,8 +5,9 @@
 # For details of the format look at auto.master(5).
 #
 #/misc	/etc/auto.misc
-/mnt/alexanderfb /etc/auto.alexanderfb uid=1000,gid=1000,--timeout=30,--ghost
-/home/srv /etc/auto.srv uid=1000,gid=1000,--timeout=30,--ghost
+{% for group in automounts %}
+{{ group.path }} /etc/auto.{{ group.group }} {{ group.options }}
+{% endfor %}
 #
 # NOTE: mounts done from a hosts map will be mounted with the
 #	"nosuid" and "nodev" options unless the "suid" and "dev"
