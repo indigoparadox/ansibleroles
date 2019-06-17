@@ -1,0 +1,9 @@
+{% for mount in group.mounts %}
+{% if mount.type is not defined or 'sshfs' == mount.type %}
+{% set fuse = mount.type %}
+{% set type = 'fuse' %}
+{% else %}
+{% set type = mount.type %}
+{% endif %}
+{{ mount.name }} -fstype={{ type }},{{ mount.options }} {{ ':sshfs#' + mount.target if 'fuse' == type else mount.target }}
+{% endfor %}

@@ -1,0 +1,35 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Upload automount group definitions
+  template:
+    src: templates/auto.j2
+    dest: '/etc/auto.{{ group.group }}'
+    backup: true
+  when: automounts is defined
+  with_items:
+    - '{{ automounts }}'
+  loop_control:
+    loop_var: group
+
+- name: Upload automount ssh_user script
+  template:
+    src: files/ssh_user
+    dest: /usr/local/bin/ssh_user
+    mode: 0755
+  when: automounts is defined
+  with_items: '{{ automounts_ssh_users }}'
+
+# TODO: This needs to do the actual mount as the user, for security.
+
+- name: Upload automount group definitions
+  template:
+    src: templates/auto.j2
+    dest: '/etc/auto.{{ group.group }}'
+    backup: true
+  when: automounts is defined
+  with_items:
+    - '{{ automounts }}'
+  loop_control:
+    loop_var: group
+
