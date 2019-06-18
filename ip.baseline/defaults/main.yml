@@ -1,2 +1,5 @@
 ---
 # defaults file for ip.baseline
+
+baseline_hostname: "{{ inventory_hostname.split('.')[0] }}"
+

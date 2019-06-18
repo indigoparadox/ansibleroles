@@ -25,6 +25,12 @@
   register: upload_key
   when: not client_key.stat.exists
 
+- name: Remove local temp OpenVPN client private key
+  file:
+    path: '{{ ca_tmp.path }}/{{ openvpn_filename_key }}'
+    state: absent
+  delegate_to: localhost
+
 - name: Fix OpenVPN client certificate format
   command: 'openssl x509 -in {{ ca_tmp.path }}/{{ openvpn_filename_cert }}.temp.crt -text -out {{ ca_tmp.path }}/{{ openvpn_filename_cert }}'
   delegate_to: localhost
@@ -37,12 +43,24 @@
   register: upload_crt
   when: not client_crt.stat.exists
 
+- name: Remove local temp OpenVPN client certificate
+  file:
+    path: '{{ ca_tmp.path }}/{{ openvpn_filename_cert }}'
+    state: absent
+  delegate_to: localhost
+
 - name: Upload OpenVPN TLS auth key
   copy:
     src: '{{ ca_tmp.path }}/{{ openvpn_filename_ta }}'
     dest: '{{ openvpn_config_root }}/{{ openvpn_filename_ta }}'
   register: upload_tls
   when: openvpn_filename_ta is defined
+
+- name: Remove local temp OpenVPN TLS auth key
+  file:
+    path: '{{ ca_tmp.path }}/{{ openvpn_filename_ta }}'
+    state: absent
+  delegate_to: localhost
 
 - name: Upload OpenVPN CA certificate
   copy:

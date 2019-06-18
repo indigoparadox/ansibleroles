@@ -5,6 +5,7 @@
   openssl_privatekey:
     path: '{{ ca_tmp.path }}/{{ openvpn_filename_key }}'
     size: '{{ openvpn_private_key_size }}'
+    mode: 0644
   delegate_to: localhost
   when: not client_key.stat.exists
 
