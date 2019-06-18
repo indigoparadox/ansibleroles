@@ -29,4 +29,5 @@ smb_passwd_chat: '*Enter\snew\s*\spassword:* %n\n *Retype\snew\s*\spassword:* %n
 smb_pam_password_change: 'yes'
 smb_bind_interfaces_only: 'yes'
 smb_usershare_allow_guests: 'yes'
+smb_hostname: '{{ inventory_hostname.split(".")[0] | upper }}'
 

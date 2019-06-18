@@ -3,7 +3,7 @@
 
 - name: Set hostname
   copy:
-    content: "{{ inventory_hostname.split('.')[0] }}"
+    content: '{{ baseline_hostname }}'
     dest: /etc/hostname
 
 - name: Set network configuration

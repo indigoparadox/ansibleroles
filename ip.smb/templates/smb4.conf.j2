@@ -4,7 +4,7 @@
 [global]
    server max protocol = {{ smb_max_protocol }}
    workgroup = {{ smb_workgroup | upper }}
-   netbios name = {{ inventory_hostname.split(".")[0] | upper }}
+   netbios name = {{ smb_hostname }}
    server string = {{ smb_server_string }}
    security = {{ smb_security }}
 {% if smb_hosts_allow is defined %}
