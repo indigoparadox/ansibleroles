@@ -46,6 +46,11 @@
       ansible_os_family == 'Fedora' or
       ansible_os_family == 'FreeBSD'
 
+- include_tasks: client-certonly.yml
+  when:
+    - openvpn_role is defined
+    - openvpn_role == 'certonly'
+
 - name: Cleanup extracted temporary keys from {{ ca_tmp.path }}
   file:
     path: '{{ item }}'

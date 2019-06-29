@@ -1,0 +1,45 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+#
+
+- name: Check for OpenVPN client certificate
+  stat:
+    path: '{{ openvpn_localcerts_root }}/{{ openvpn_filename_cert }}'
+  register: client_crt
+  delegate_to: localhost
+
+- include_tasks: generate.yml
+
+- name: Store OpenVPN client private key
+  copy:
+    src: '{{ ca_tmp.path }}/{{ openvpn_filename_key }}'
+    dest: '{{ openvpn_localcerts_root }}/{{ openvpn_filename_key }}'
+  register: upload_key
+  when: not client_key.stat.exists
+  delegate_to: localhost
+
+- name: Remove local temp OpenVPN client private key
+  file:
+    path: '{{ ca_tmp.path }}/{{ openvpn_filename_key }}'
+    state: absent
+  delegate_to: localhost
+
+- name: Fix OpenVPN client certificate format
+  command: 'openssl x509 -in {{ ca_tmp.path }}/{{ openvpn_filename_cert }}.temp.crt -text -out {{ ca_tmp.path }}/{{ openvpn_filename_cert }}'
+  delegate_to: localhost
+  when: not client_crt.stat.exists
+
+- name: Store OpenVPN client certificate
+  copy:
+    src: '{{ ca_tmp.path }}/{{ openvpn_filename_cert }}'
+    dest: '{{ openvpn_localcerts_root }}/{{ openvpn_filename_cert }}'
+  register: upload_crt
+  when: not client_crt.stat.exists
+  delegate_to: localhost
+
+- name: Remove local temp OpenVPN client certificate
+  file:
+    path: '{{ ca_tmp.path }}/{{ openvpn_filename_cert }}'
+    state: absent
+  delegate_to: localhost
+
