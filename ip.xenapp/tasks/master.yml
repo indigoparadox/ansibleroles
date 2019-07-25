@@ -1,0 +1,27 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+#- name: Wait for updates to be installed
+#  pause:
+#    prompt: "Please type 'continue' in order to proceed"
+#  register: pause_prompt
+
+- name: Remove extraneous desktop shortcuts
+  win_file:
+    path: '{{ item }}'
+    state: absent
+  with_items:
+    - '{{ xenapp_public_desktop }}2018 Lacerte Tax.LNK'
+  tags:
+    - never
+    - xenapp-up
+
+#- name: Take master VM snapshot
+#
+#- name: Roll out images to XenApp servers
+#
+#- name: Reboot XenApp servers
+#
+#- name: Remove XenApp servers from maintenance mode
+
+
