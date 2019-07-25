@@ -1,0 +1,76 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Get resource
+  delegate_to: localhost
+  ignore_errors: true
+  register: get_res
+  uri:
+    url: "{{ nitro_protocol | default('http') }}://{{ nsip }}/nitro/v1/config/{{ resource }}/{{ resource_name }}"
+    method: GET
+    status_code: 200
+    return_content: yes
+    headers:
+      X-NITRO-USER: "{{ nitro_user }}"
+      X-NITRO-PASS: "{{ nitro_pass }}"
+
+#- debug: msg='{{ get_res.json.errorcode }}'
+
+- name: Check success or expected failure
+  assert:
+    that: get_res is succeeded or
+      (get_res is failed and get_res.json.errorcode == 258) or
+      (get_res is failed and get_res.json.errorcode == 3248)
+
+- name: Add resource when not existing
+  delegate_to: localhost
+  when: get_res is failed
+  uri:
+    url: "{{ nitro_protocol | default('http') }}://{{ nsip }}/nitro/v1/config/{{ resource }}"
+    method: POST
+    status_code: 201
+    return_content: yes
+    headers:
+      X-NITRO-USER: "{{ nitro_user }}"
+      X-NITRO-PASS: "{{ nitro_pass }}"
+    body_format: json
+    body: "{{ request_payload }}"
+
+- name: Check if updated for progress report
+  set_fact:
+    res_changed: true
+  when: get_res.json[resource][item.0] != item.1
+  with_dict: '{{ request_payload }}'
+  #no_log: true
+
+- name: Update resource if existing
+  delegate_to: localhost
+  when: get_res is succeeded
+  register: set_res
+  uri:
+    url: "{{ nitro_protocol | default('http') }}://{{ nsip }}/nitro/v1/config/{{ resource }}"
+    method: PUT
+    status_code: 200
+    return_content: yes
+    headers:
+      X-NITRO-USER: "{{ nitro_user }}"
+      X-NITRO-PASS: "{{ nitro_pass }}"
+    body_format: json
+    body: "{{ get_res.json[resource] | combine(request_payload) }}"
+  changed_when:
+    - set_res is succeeded
+    - res_changed is defined
+    - res_changed
+
+#- name: Save running configuration
+#  delegate_to: localhost
+#  uri:
+#    url: "{{ nitro_protocol | default('http') }}://{{ nsip }}/nitro/v1/config/nsconfig?action=save"
+#    method: POST
+#    status_code: 200
+#    headers:
+#      X-NITRO-USER: "{{ nitro_user }}"
+#      X-NITRO-PASS: "{{ nitro_pass }}"
+#    body_format: json
+#    body:
+#      nsconfig: {}

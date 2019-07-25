@@ -1,0 +1,26 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Get hash for remote file
+  raw: shell sha1 -q "{{ file_remote_path }}"
+  register: file_hash_remote
+  ignore_errors: true
+  changed_when: false 
+  no_log: true
+
+- name: Get hash for local file
+  stat: 
+    path: '{{ file_local_path }}'
+    get_checksum: true
+  register: file_hash_local
+  delegate_to: localhost
+
+- name: Compare file hashes and put if different
+  command: 'scp "{{ file_local_path }}" "{{ ansible_ssh_user }}@{{ inventory_hostname }}:{{ file_remote_path }}"'
+  register: file_hash_res
+  delegate_to: localhost
+  when:
+    - file_hash_local.stat.checksum is defined
+    - not file_hash_remote.stdout_lines is defined or
+      not file_hash_local.stat.checksum == file_hash_remote.stdout_lines[1]
+
