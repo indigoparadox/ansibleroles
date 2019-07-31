@@ -13,6 +13,7 @@
   package:
     name: autofs
     state: present
+  when: automounts is defined
  
 # TODO: This needs to do the actual mount as the user, for security.
 
@@ -34,10 +35,11 @@
     dest: '/etc/auto.master'
     backup: true
   register: autofs_master
+  when: automounts is defined
 
 - name: Restart autofs service
   systemd:
     name: autofs
     state: restarted
-  when: autofs_groups.changed or autofs_master.changed
+  when: automounts is defined and (autofs_groups.changed or autofs_master.changed)
 
