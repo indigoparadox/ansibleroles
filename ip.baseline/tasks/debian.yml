@@ -18,8 +18,6 @@
     regexp: '^.?precedence ::ffff:0:0/96  100'
     line: 'precedence ::ffff:0:0/96  100'
 
-- include: autofs.yml
-
 #- name: Detect ssmtp package
 #  shell: dpkg-query -f '${binary:Package}\n' -W | grep -q 'ssmtp'
 #  register: package_ssmtp
