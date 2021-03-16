@@ -60,14 +60,12 @@
     cache_valid_time: 86400
   when: ansible_distribution == 'Debian'
 
-# TODO: Pick tmux or screen.
 - name: Install basic Linux packages
   package:
     name: '{{ item }}'
     state: present
   loop:
     - mosh
-    - screen
     - vim-nox
     - zsh
     - mercurial

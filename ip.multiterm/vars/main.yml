@@ -1,0 +1,5 @@
+---
+# vars file for ip.multiterm
+
+multiterm_plexer: screen
+
