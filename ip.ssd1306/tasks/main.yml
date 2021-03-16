@@ -1,0 +1,41 @@
+---
+# tasks file for ip.ssd1306
+
+- name: Check for Python installation and virtualenv
+  package:
+    name:
+    - libopenjp2-7
+    - ttf-dejavu
+  become: yes
+
+- name: Create Adafruit virtualenv
+  pip:
+    name:
+    - adafruit-circuitpython-ssd1306
+    - pillow
+    virtualenv: "{{ venvs_root_path }}/{{ adafruit_venv }}"
+    virtualenv_command: /usr/bin/python3 -m venv
+  become: yes
+
+- name: Deploy SSD1306 script from git
+  git:
+    repo: https://github.com/uctronics/u6143_ssd1306
+    dest: /usr/local/lib/u6143_ssd1306
+  become: yes
+
+- name: Create systemd service
+  template:
+    src: templates/ssd1306.service.j2
+    dest: /etc/systemd/system/ssd1306.service
+  become: yes
+  register: ssd1306
+
+- name: Systemd reload
+  systemd:
+    daemon_reload: yes
+    enabled: yes
+    name: ssd1306
+    state: started
+  become: yes
+  when: ssd1306.changed
+

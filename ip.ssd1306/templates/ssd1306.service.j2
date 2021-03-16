@@ -1,0 +1,10 @@
+[Unit]
+Description=System Stats Display
+
+[Service]
+Type=simple
+ExecStart=/usr/local/lib/venv-adafruit/bin/python /usr/local/lib/u6143_ssd1306/ssd1306_stats.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

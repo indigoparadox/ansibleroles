@@ -1,0 +1,6 @@
+---
+# vars file for ip.adafruit
+
+venvs_root_path: /usr/local/lib
+adafruit_venv: venv-adafruit
+

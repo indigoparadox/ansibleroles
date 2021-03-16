@@ -1,0 +1,8 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+#
+- include: linux.yml
+  when: ansible_os_family == 'Debian' or 
+        ansible_os_family == 'RedHat' or
+        ansible_os_family == 'Kali GNU/Linux'
+

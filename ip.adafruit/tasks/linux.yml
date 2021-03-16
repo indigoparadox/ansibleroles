@@ -1,0 +1,22 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+#
+- name: Check for Python installation, virtualenv, git
+  package:
+    name:
+    - python-virtualenv
+    - python3-virtualenv
+    - python3-venv
+    - python3-pil
+    - git
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Create Adafruit virtualenv
+  pip:
+    name:
+    - adafruit-blinka
+    - pillow
+    virtualenv: "{{ venvs_root_path }}/{{ adafruit_venv }}"
+    virtualenv_command: /usr/bin/python3 -m venv
+
