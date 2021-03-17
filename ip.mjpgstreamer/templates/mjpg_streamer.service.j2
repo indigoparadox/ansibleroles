@@ -1,0 +1,11 @@
+[Unit]
+Description=MJPEG Streaming Service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/mjpg_streamer -i "{{ mjpg_streamer_input }}" -o "{{ mjpg_streamer_output }}"
+Restart=always
+User={{ mjpg_streamer_user }}
+
+[Install]
+WantedBy=multi-user.target

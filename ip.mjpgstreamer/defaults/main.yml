@@ -1,0 +1,14 @@
+---
+# defaults file for ip.mjpegstreamer
+
+mjpg_streamer_src_root: /usr/local/src
+mjpg_streamer_install_become: false
+
+mjpg_streamer_input: /usr/local/lib/mjpg-streamer/input_raspicam.so -rot 270
+mjpg_streamer_output: /usr/local/lib/mjpg-streamer/output_http.so -w /var/www/
+
+mjpg_streamer_user: mjpg
+mjpg_streamer_groups:
+- video
+- www-data
+

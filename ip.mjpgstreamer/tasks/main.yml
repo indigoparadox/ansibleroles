@@ -1,0 +1,52 @@
+---
+# tasks file for ip.mjpegstreamer
+
+- name: Install mjpg_streamer dependencies
+  package:
+    name:
+    - build-essential
+    - cmake
+    - python-pil
+    - python3-pil
+    - libjpeg-dev
+    - git
+    state: present
+
+- name: Checkout latest mjpg_streamer
+  git:
+    repo: https://github.com/jacksonliam/mjpg-streamer
+    dest: '{{ mjpg_streamer_src_root }}/mjpg-streamer'
+
+- name: Compile mjpg_streamer
+  command:
+    chdir: '{{ mjpg_streamer_src_root }}/mjpg-streamer/mjpg-streamer-experimental/'
+    cmd: 'make CMAKE_BUILD_TYPE=debug'
+    creates: '{{ mjpg_streamer_src_root }}/mjpg-streamer/mjpg-streamer-experimental/mjpg_streamer'
+ 
+- name: Install mjpg_streamer
+  command:
+    chdir: '{{ mjpg_streamer_src_root }}/mjpg-streamer/mjpg-streamer-experimental/'
+    cmd: 'make install'
+    creates: /usr/local/bin/mjpg_streamer
+  become: '{{ mjpg_streamer_install_become }}'
+
+- name: Create mjpg_streamer user
+  user:
+    create_home: no
+    home: /nonexistant
+    name: '{{ mjpg_streamer_user }}'
+    shell: '/bin/false'
+    groups: '{{ mjpg_streamer_groups }}'
+
+- name: Create mjpg_streamer service
+  template:
+    src: templates/mjpg_streamer.service.j2
+    dest: /etc/systemd/system/mjpg_streamer.service
+
+- name: Enable and start mjpg_streamer
+  systemd:
+    daemon_reload: yes
+    enabled: yes
+    name: mjpg_streamer
+    state: started
+
