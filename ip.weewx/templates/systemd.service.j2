@@ -1,0 +1,10 @@
+[Unit]
+Description=Weather station hardware utility
+
+[Service]
+Type=simple
+ExecStart={{ weewx_root }}/bin/weewxd
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

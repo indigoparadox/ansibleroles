@@ -1,0 +1,9 @@
+---
+# vars file for ip.weewx
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+weewx_download_url: 'https://github.com/weewx/weewx/archive/v{{ weewx_version }}.tar.gz'
+weewx_src_root: /usr/local/src
+weewx_root: /home/weewx
+weewx_version: '4.1.1'
+weewx_mqtt_download_url: 'https://github.com/matthewwall/weewx-mqtt/archive/refs/heads/master.zip'

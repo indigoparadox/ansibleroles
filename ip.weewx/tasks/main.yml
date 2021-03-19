@@ -1,0 +1,134 @@
+---
+# tasks file for ip.weewx
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Configure weewx environment (Debian)
+  set_fact:
+    weewx_python_cmd: /usr/bin/python2
+  when: ansible_os_family == 'Debian'
+
+- name: Install weewx requirements (Debian)
+  apt:
+    name:
+    - python-virtualenv
+    - python-configobj
+    - python-six
+    - python-cheetah
+    - python-pil
+    - python-serial
+    - python-ephem
+    - python-usb
+    - python-pymysql
+    - python-paho-mqtt
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Configure weewx environment (FreeBSD)
+  set_fact:
+    weewx_python_cmd: /usr/local/bin/python2.7
+  when: ansible_os_family == 'FreeBSD'
+
+- name: Install weewx requirements (FreeBSD)
+  pkgng:
+    name:
+    - py27-configobj
+    - py27-six
+    - py27-cheetah
+    - py27-pillow
+    - py27-pyserial
+    - py27-pyephem
+    - py27-pyusb
+    - py27-pymysql
+    - py27-paho-mqtt
+    state: present
+  when: ansible_os_family == 'FreeBSD'
+
+- name: Ensure {{ weewx_src_root }} exists
+  file:
+    path: '{{ weewx_src_root }}'
+    state: directory
+
+- name: Create weewx group
+  group:
+    name: '{{ weewx_group }}'
+    state: present
+
+- name: Create weewx user
+  user:
+    name: '{{ weewx_user }}'
+    home: '{{ weewx_root }}'
+    group: '{{ weewx_group }}'
+    state: present
+
+- name: Download weewx source
+  unarchive:
+    remote_src: yes
+    src: '{{ weewx_download_url }}'
+    dest: '{{ weewx_src_root }}'
+    creates: '{{ weewx_src_root }}/weewx-{{ weewx_version }}/setup.py'
+
+- name: Install weewx
+  command:
+    chdir: '{{ weewx_src_root }}/weewx-{{ weewx_version }}'
+    cmd: '{{ weewx_python_cmd }} ./setup.py install'
+    creates: '{{ weewx_root }}/README.md'
+
+- name: Configure weewx
+  template:
+    src: templates/weewx.conf.j2
+    dest: '{{ weewx_root }}/weewx.conf'
+    owner: '{{ weewx_user }}'
+  register: weewx_configure
+
+- name: Download MQTT plugin
+  get_url:
+    dest: '{{ weewx_src_root }}/weewx-{{ weewx_version }}/weewx-mqtt.zip'
+    url: '{{ weewx_mqtt_download_url }}'
+
+- name: Install MQTT plugin
+  command:
+    creates: '{{ weewx_root }}/bin/user/installer/mqtt/install.py'
+    chdir: '{{ weewx_src_root }}/weewx-{{ weewx_version }}'
+    cmd: '{{ weewx_python_cmd }} "{{ weewx_root }}/bin/wee_extension" weewx-mqtt.zip'
+
+- name: Ensure correct owner and permissions
+  file:
+    path: '{{ weewx_root }}'
+    state: directory
+    owner: '{{ weewx_user }}'
+    recurse: yes
+
+- name: Create weewx service (Debian)
+  template:
+    src: templates/systemd.service.j2
+    dest: '/etc/systemd/system/weewx.service'
+    mode: '0666'
+  when: ansible_os_family == 'Debian'
+
+- name: Start weewx service (Debian)
+  systemd:
+    daemon_reload: yes
+    enabled: yes
+    name: 'weewx'
+    state: started
+  when: ansible_os_family == 'Debian'
+
+- name: Create weewx service (FreeBSD)
+  template:
+    src: templates/weewx.fbsd.j2
+    dest: /usr/local/etc/rc.d/weewx
+    mode: 0555
+  when: ansible_os_family == 'FreeBSD'
+
+- name: Start weewx service (FreeBSD)
+  service:
+    name: weewx
+    enabled: yes
+    state: started
+
+- name: Restart weewx service (FreeBSD)
+  service:
+    name: weewx
+    enabled: yes
+    state: restarted
+  when: weewx_configure.changed

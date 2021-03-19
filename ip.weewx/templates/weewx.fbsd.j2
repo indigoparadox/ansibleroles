@@ -1,0 +1,36 @@
+#!/bin/sh
+#
+# PROVIDE: weewx
+# REQUIRE: DAEMON devfs
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="weewx" # How the service will be invoked from service
+
+pidfile="{{ weewx_root }}/weewx.pid"
+procname="{{ weewx_python_cmd }}"
+command="{{ weewx_root }}/bin/weewxd"
+command_args="-d -p ${pidfile}"
+start_cmd="${name}_start"
+stop_cmd="${name}_stop"
+rcvar=weewx_enable
+
+load_rc_config $name
+: ${weewx_enable:=NO}
+: ${weewx_user:="weewx"}
+
+weewx_start() {
+   #rm -rf /home/weewx/public_html
+   /usr/sbin/daemon -u $weewx_user $command $command_args
+}
+
+weewx_stop() {
+   if [ -e "${pidfile}" ]; then
+      kill -s TERM `cat ${pidfile}`
+   else
+      echo "${name} is not running"
+   fi
+}
+
+run_rc_command "$1"

@@ -1,0 +1,113 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+# defaults file for ip.weewx
+
+weewx_debug: 0
+weewx_log_success: True
+weewx_log_failure: True
+weewx_socket_timeout: 20
+weewx_user: weewx
+weewx_group: weewx
+
+weewx_registry_register: False
+weewx_awekas_enable: False
+weewx_cwop_enable: False
+weewx_pwsweather_enable: False
+weewx_wow_enable: False
+weewx_wunderground_enable: False
+
+weewx_mqtt_enable: False
+
+weewx_report_skin_root: skins
+weewx_report_html_root: public_html
+weewx_report_data_binding: wx_binding
+weewx_report_log_success: True
+weewx_report_log_failure: True
+weewx_report_seasons_skin: Seasons
+weewx_report_seasons_enable: True
+weewx_report_smartphone_skin: Smartphone
+weewx_report_smartphone_enable: True
+weewx_report_smartphone_html_root: '{{ weewx_report_html_root }}/smartphone'
+weewx_report_mobile_enable: True
+weewx_report_mobile_skin: Mobile
+weewx_report_mobile_html_root: '{{ weewx_report_html_root }}/mobile'
+weewx_report_standard_enable: False
+weewx_report_ftp_enable: False
+weewx_report_ftp_user: replace_me
+weewx_report_ftp_password: replace_me
+weewx_report_ftp_path: replace_me
+weewx_report_ftp_server: replace_me
+weewx_report_ftp_secure: False
+weewx_report_ftp_port: 21
+weewx_report_ftp_passive: 1
+weewx_report_rsync_enable: False
+weewx_report_rsync_server: replace_me
+weewx_report_rsync_user: replace_me
+weewx_report_rsync_path: replace_me
+weewx_report_rsync_delete: 0
+
+weewx_calc_pressure: prefer_hardware
+weewx_calc_altimeter: prefer_hardware
+weewx_calc_app_temp: prefer_hardware
+weewx_calc_barometer: prefer_hardware
+weewx_calc_beaufort: prefer_hardware
+weewx_calc_cloudbase: prefer_hardware
+weewx_calc_dewpoint: prefer_hardware
+weewx_calc_et: prefer_hardware
+weewx_calc_heatindex: prefer_hardware
+weewx_calc_humidex: prefer_hardware
+weewx_calc_in_dewpoint: prefer_hardware
+weewx_calc_max_solar_rad: prefer_hardware
+weewx_calc_rain_rate: prefer_hardware
+weewx_calc_windchill: prefer_hardware
+weewx_calc_windrun: prefer_hardware
+
+weewx_timesync_clock_check: 14400
+weewx_timesync_max_drift: 5
+
+weewx_archive_interval: 300
+weewx_archive_record_generation: hardware
+weewx_archive_loop_hilo: True
+weewx_archive_data_binding: wx_binding
+
+weewx_data_bindings:
+- name: wx_binding
+  database: archive_sqlite
+  table_name: archive
+  manager: weewx.manager.DaySummaryManager
+  schema: schemas.wview_extended.schema
+
+weewx_databases:
+- name: archive_sqlite
+  database_name: weewx.sdb
+  database_type: SQLite
+- name: archive_mysql
+  database_name: weewx
+  database_type: MySQL
+
+weewx_database_types:
+- name: SQLite
+  driver: weedb.sqlite
+  sqlite_root: '%(WEEWX_ROOT)s/archive'
+
+weewx_prep_services:
+- weewx.engine.StdTimeSynch
+weewx_data_services:
+weewx_process_services:
+- weewx.engine.StdConvert
+- weewx.engine.StdCalibrate
+- weewx.engine.StdQC
+- weewx.wxservices.StdWXCalculate
+weewx_archive_services:
+- weewx.engine.StdArchive
+weewx_restful_services:
+- weewx.restx.StdStationRegistry
+- weewx.restx.StdWunderground
+- weewx.restx.StdPWSweather
+- weewx.restx.StdCWOP
+- weewx.restx.StdWOW
+- weewx.restx.StdAWEKAS
+weewx_report_services:
+- weewx.engine.StdPrint
+- weewx.engine.StdReport
+
