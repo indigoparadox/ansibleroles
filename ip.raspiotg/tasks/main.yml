@@ -1,0 +1,54 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Enable DWC2 overlay
+  lineinfile:
+    path: /boot/config.txt
+    regexp: '^dtoverlay=dwc2'
+    line: dtoverlay=dwc2
+
+- name: Enable DWC2 module
+  lineinfile:
+    path: /etc/modules-load.d/modules.conf
+    regexp: '^dwc2'
+    line: dwc2
+
+- name: Create image file
+  command:
+    cmd: 'dd if=/dev/zero of="{{ raspiotg_image_file }}xxx" bs=1024 count={{ raspiotg_sz }}'
+    creates: '{{ raspiotg_image_file }}'
+  register: raspiorg_image
+
+- name: Format image file
+  command:
+    cmd: 'mkfs.vfat "{{ raspiotg_image_file }}"'
+  when: raspiorg_image.changed
+
+- name: Add image file to fstab
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^{{ raspiotg_image_file }}'
+    line: '{{ raspiotg_image_file }} {{raspiotg_mount_point }} vfat users,umask=000 0 2'
+
+- name: Install usbshare dependencies
+  package:
+    name: python3-watchdog
+    state: present
+
+- name: Install usbshare
+  copy:
+    src: files/usbshare.py
+    dest: /usr/local/bin/usbshare.py
+    mode: 0755
+
+- name: Create usbshare config
+  template:
+    src: templates/usbshare.ini.j2
+    dest: /etc/usbshare.ini
+
+- name: Create usbshare service
+  include_tasks: tasks/systemd.yml
+  loop:
+  - name: usbshare
+    description: USB Share Watchdog
+    exec: '/usr/local/bin/usbshare.py'

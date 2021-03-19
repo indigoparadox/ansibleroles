@@ -1,0 +1,15 @@
+---
+
+- name: 'Create systemd service for {{ item.name }}'
+  template:
+    src: templates/systemd.service.j2
+    dest: '/etc/systemd/system/{{ item.name }}.service'
+    mode: '0666'
+
+- name: 'Enable and start {{ item.name }}'
+  systemd:
+    daemon_reload: yes
+    enabled: yes
+    name: '{{ item.name }}'
+    state: started
+

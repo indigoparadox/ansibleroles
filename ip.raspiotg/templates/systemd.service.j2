@@ -1,0 +1,10 @@
+[Unit]
+Description={{ item.description }}
+
+[Service]
+Type=simple
+ExecStart={{ item.exec }}
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

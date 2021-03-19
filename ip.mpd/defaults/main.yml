@@ -1,0 +1,39 @@
+---
+# defaults file for ip.mpd
+
+mpd_music_directory: /var/lib/mpd/music
+mpd_log_file: /var/log/mpd/mpd.log
+mpd_playlist_directory: /var/lib/mpd/playlists
+mpd_db_file: /var/lib/mpd/tag_cache
+mpd_pid_file: /run/mpd/pid
+mpd_state_file: /var/lib/mpd/state
+mpd_sticker_file: /var/lib/mpd/sticker.sql
+mpd_bind: localhost
+mpd_restore_paused: yes
+mpd_absolute_playlists: no
+mpd_auto_update: yes
+mpd_follow_outside_symlinks: no
+mpd_follow_inside_symlinks: yes
+mpd_zeroconf_enabled: no
+#mpd_passwords:
+#   password: 'password'
+#   perms: 'read,add,control,admin'
+mpd_default_permissions: 'read,add,control,admin'
+
+mpd_inputs:
+- plugin: curl
+- plugin: tidal
+  enabled: no
+- plugin: qobuz
+  enabled: no
+
+mpd_decoders:
+- plugin: hybrid_dsd
+  enabled: no
+
+mpd_outputs:
+- type: alsa
+- name: CODEC
+
+mpd_filesystem_charset: UTF-8
+

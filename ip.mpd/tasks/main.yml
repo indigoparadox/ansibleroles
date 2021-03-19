@@ -1,0 +1,19 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+# tasks file for ip.mpd
+
+- name: Install MPD
+  package:
+    name: mpd
+    state: present
+
+- name: Configure MPD
+  template:
+    src: templates/mpd.conf.j2
+    dest: /etc/mpd.conf
+
+- name: Enable MPD
+  systemd:
+    name: mpd
+    state: started
+
