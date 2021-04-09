@@ -1,0 +1,39 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Install LDAP modules
+  pkgng:
+    name:
+    - openldap-client
+    - pam_ldap
+    - nss_ldap
+    state: present
+
+- name: Create openldap config directory
+  file:
+    name: /usr/local/etc/openldap
+    state: directory
+
+- name: Install configurations
+  template:
+    src: templates/ldap.conf.j2
+    dest: '{{ item }}'
+    backup: yes
+  loop:
+  - /usr/local/etc/ldap.conf
+  - /usr/local/etc/nss_ldap.conf
+  - /usr/local/etc/openldap/ldap.conf
+
+- name: Enable LDAP in NSS
+  lineinfile:
+    regexp: '^{{ item }}: .*'
+    line: '{{ item }}: ldap files'
+    backup: yes
+    path: /etc/nsswitch.conf
+    owner: root
+    group: wheel
+    mode: '0644'
+  loop:
+  - group
+  - passwd
+
