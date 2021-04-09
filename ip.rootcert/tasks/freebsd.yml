@@ -1,0 +1,30 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Create root certificate path
+  file:
+    name: /etc/ssl/certs
+    owner: root
+    group: wheel
+    mode: '0644'
+    state: directory
+
+- name: Upload root SSL certificate
+  copy:
+    src: '{{ rootcert_local_crt_path }}/{{ item }}'
+    dest: '/etc/ssl/certs/{{ item }}'
+    owner: root
+    group: wheel
+    mode: '0644'
+
+- name: Calculate SSL certificate hash
+  command: '/usr/bin/openssl x509 -noout -hash -in /etc/ssl/certs/{{ item }}'
+  register: crt_hash
+  changed_when: False
+
+- name: Create SSL certificate hash link
+  file:
+    name: '/etc/ssl/certs/{{ crt_hash.stdout }}.0'
+    src: '/etc/ssl/certs/{{ item }}'
+    state: link
+
