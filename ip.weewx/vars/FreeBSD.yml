@@ -1,0 +1,15 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+weewx_python_cmd: /usr/local/bin/python
+weewx_python_deps:
+- py27-configobj
+- py27-six
+- py27-cheetah
+- py27-pillow
+- py27-pyserial
+- py27-pyephem
+- py27-pyusb
+- py27-pymysql
+- py27-paho-mqtt
+
