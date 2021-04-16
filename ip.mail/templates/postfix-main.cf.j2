@@ -1,9 +1,4 @@
-# See /usr/share/postfix/main.cf.dist for a commented, more complete version
 
-
-# Debian specific:  Specifying a file name will cause the first
-# line of that file to be used as the name.  The Debian default
-# is /etc/mailname.
 myorigin = {{ mail_origin }}
 
 smtpd_banner = {{ mail_banner }}
@@ -13,10 +8,7 @@ biff = {{ mail_biff }}
 # appending .domain is the MUA's job.
 append_dot_mydomain = {{ mail_append_dot_domain }}
 
-# Uncomment the next line to generate "delayed mail" warnings
-#delay_warning_time = 4h
-
-readme_directory = no
+readme_directory = {{ mail_readme_directory }}
 
 {% if mail_use_tls is defined and mail_use_tls %}
 # TLS parameters
@@ -26,19 +18,23 @@ smtpd_use_tls={{ mail_use_tls }}
 smtpd_tls_session_cache_database={{ maild_tls_session_cache_database }}
 smtp_tls_session_cache_database={{ mail_tls_session_cache_database }}
 
-# See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
-# information on enabling SSL in the smtp client.
-
 {% endif %}
-smtp_host_lookup = native
+smtp_dns_support_level = {{ mail_pf_dns_support_level }}
+smtp_host_lookup = {{ mail_pf_host_lookup }}
 smtpd_recipient_restrictions = {{ mail_recipient_restrictions | join( ' ' ) }}
 smtpd_relay_restrictions = {{ mail_relay_restrictions | join( ' ' ) }}
 myhostname = {{ mail_hostname }}
 alias_maps = {{ mail_alias_maps }}
 alias_database = {{ mail_alias_database }}
-mydestination = {{ mail_mydestination }}
-{% if mail_relayhost is defined %}
-relayhost = {{ mail_relayhost }}
+mydestination = {{ mail_destinations | join( ' ' ) }}
+{% if mail_relay_host is defined %}
+relayhost = {{ mail_relay_host }}
+{% if mail_relay_creds is defined %}
+smtp_use_tls = {{ mail_relay_creds.tls }}
+smtp_sasl_auth_enable = yes
+smtp_sasl_security_options =
+smtp_sasl_password_maps = hash:{{ mail_relay_creds_path }}
+{% endif %}
 {% endif %}
 mynetworks = {{ mail_mynetworks | join( ' ' ) }}
 {% if mail_mailbox_command is defined %}
@@ -58,4 +54,23 @@ relay_domains = {{ mail_relay_domains | join( ', ' ) }}
 {% if mail_relay_recipient_maps is defined %}
 relay_recipient_maps = {{ mail_relay_recipient_maps }}
 {% endif %}
+
+# FIXME
+queue_directory = /var/spool/postfix
+meta_directory = {{ mail_sys_prefix }}/libexec/postfix
+setgid_group = maildrop
+command_directory = {{ mail_sys_prefix }}/sbin
+sample_directory = {{ mail_sys_prefix }}/etc/postfix
+newaliases_path = {{ mail_sys_prefix }}/bin/newaliases
+mailq_path = {{ mail_sys_prefix }}/bin/mailq
+sendmail_path = {{ mail_sys_prefix }}/sbin/sendmail
+mail_owner = postfix
+daemon_directory = {{ mail_sys_prefix }}/libexec/postfix
+manpage_directory = {{ mail_sys_prefix }}/man
+html_directory = {{ mail_sys_prefix }}/share/doc/postfix
+data_directory = /var/db/postfix
+shlib_directory = {{ mail_sys_prefix }}/lib/postfix
+inet_protocols = ipv4
+
+compatibility_level = 2
 

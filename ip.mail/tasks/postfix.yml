@@ -1,10 +1,10 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
-#- name: Install postfix MTA
-#  package:
-#    - name: postfix
-#      state: present
+- name: Install postfix MTA
+  package:
+    name: '{{ mail_postfix_packages }}'
+    state: present
 
 - name: Add postfix service to startup
   lineinfile:
@@ -23,6 +23,20 @@
   with_items:
     - main.cf
     - master.cf
+
+- name: Create SASL credentials file for relay
+  template:
+    src: templates/sasl_passwd.j2
+    dest: '{{ mail_relay_creds_path }}'
+    mode: 0600
+    owner: root
+  when: mail_relay_creds is defined
+  register: sasl_passwd
+
+- name: Compile SASL credentials file
+  command:
+    cmd: '{{ mail_postmap_cmd }} {{ mail_relay_creds_path }}'
+  when: sasl_passwd.changed
  
 - name: Restart postfix if applicable
   service:

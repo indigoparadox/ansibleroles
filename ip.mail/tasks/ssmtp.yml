@@ -1,0 +1,24 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Install ssmtp MTA
+  package:
+    name: ssmtp
+    state: present
+
+- name: Configure ssmtp MTA
+  template:
+    src: ssmtp.conf.j2
+    dest: '{{ mail_ssmtp_conf_path }}'
+    backup: yes
+    mode: 0644
+    owner: root
+
+- name: Configure ssmtp revaliases
+  template:
+    src: ssmtp-revaliases.j2
+    dest: '{{ mail_ssmtp_revaliases_path }}'
+    backup: yes
+    mode: 0644
+    owner: root
+

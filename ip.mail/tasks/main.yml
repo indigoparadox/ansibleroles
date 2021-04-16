@@ -2,30 +2,46 @@
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 # tasks file for ip.mail
 
+- include_vars: '{{ ansible_os_family|lower }}.yml'
+
 - include: postfix.yml
   when:
-    - ansible_os_family == 'Debian' or
-      ansible_os_family == 'RedHat' or
-      ansible_os_family == 'FreeBSD' or
-      ansible_os_family == 'Kali GNU/Linux'
-    - mail_mta == 'postfix'
+  - ansible_os_family == 'Debian' or
+    ansible_os_family == 'RedHat' or
+    ansible_os_family == 'FreeBSD' or
+    ansible_os_family == 'Kali GNU/Linux'
+  - mail_mta == 'postfix'
+
+- include: ssmtp.yml
+  when:
+  - ansible_os_family == 'Debian' or
+    ansible_os_family == 'RedHat' or
+    ansible_os_family == 'FreeBSD' or
+    ansible_os_family == 'Kali GNU/Linux'
+  - mail_mta == 'ssmtp'
 
 - include: fetchmail.yml
   when:
-    - ansible_os_family == 'Debian' or
-      ansible_os_family == 'RedHat' or
-      ansible_os_family == 'FreeBSD' or
-      ansible_os_family == 'Kali GNU/Linux'
-    - mail_fetchmail_configs is defined
+  - ansible_os_family == 'Debian' or
+    ansible_os_family == 'RedHat' or
+    ansible_os_family == 'FreeBSD' or
+    ansible_os_family == 'Kali GNU/Linux'
+  - mail_fetchmail_configs is defined
 
 - name: Upload mail aliases
   template:
     src: 'templates/aliases.j2'
     dest: '{{ mail_aliases_path }}'
     backup: True
+  when:
+  - mail_aliases is defined
+  - mail_mta != 'ssmtp'
   register: aliases_upload
 
 - name: Process aliases
   command: '{{ mail_aliases_command }}'
-  when: aliases_upload.changed
+  when:
+  - mail_aliases is defined
+  - mail_mta != 'ssmtp'
+  - aliases_upload.changed
  

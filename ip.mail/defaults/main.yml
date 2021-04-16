@@ -5,8 +5,6 @@
 mail_banner: $myhostname
 mail_biff: 'no'
 mail_append_dot_domain: 'no'
-maild_tls_session_cache_database: 'btree:${data_directory}/smtpd_scache'
-mail_tls_session_cache_database: 'btree:${data_directory}/smtp_scache'
 mail_recipient_restrictions:
   - permit_mynetworks
   - reject_unauth_destination
@@ -14,15 +12,21 @@ mail_relay_restrictions:
   - permit_mynetworks
   - permit_sasl_authenticated
   - defer_unauth_destination
-mail_hostname: '{{ inventory_hostname }}'
-mail_alias_maps: 'hash:/etc/aliases'
-mail_alias_database: '{{ mail_alias_maps }}.db'
+mail_hostname: '{{ inventory_hostname_short }}'
+mail_destinations:
+  - '{{ inventory_hostname }}'
+  - '{{ inventory_hostname_short }}'
+  - localhost
 mail_mydestination:
 mail_mailbox_size_limit: 0
 mail_recipient_delimiter: +
-mail_transport_maps: 'cdb:/etc/postfix/transport_maps'
-mail_relay_domains: '$mydestination, $transport_maps'
-mail_config_dir: /etc/postfix
-mail_aliases_command: /usr/bin/newaliases
-mail_aliases_path: /etc/mail/aliases
+#mail_relay_domains:
+#- $mydestination
+#- $transport_maps
+mail_origin: '{{ inventory_hostname }}'
+mail_pf_host_lookup: dns
+mail_pf_dns_support_level: enabled
+
+mail_ssmtp_allow_from_override: True
+mail_ssmtp_root:
 
