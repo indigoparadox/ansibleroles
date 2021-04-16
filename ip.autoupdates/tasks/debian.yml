@@ -1,0 +1,56 @@
+---
+# tasks file for ip.autoupdates
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Install unattended-upgrades
+  apt:
+    name:
+    - unattended-upgrades
+    - apt-listchanges
+    state: present
+    update_cache: yes
+    cache_valid_time: 86400
+
+- name: Configure unattended-upgrades e-mail
+  lineinfile:
+    regexp: '\s*?Unattended-Upgrade::Mail ".*";'
+    line: 'Unattended-Upgrade::Mail "{{ autoupdates_email }}";'
+    path: /etc/apt/apt.conf.d/50unattended-upgrades
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Configure unattended-upgrades reboot
+  lineinfile:
+    regexp: '\s*?Unattended-Upgrade::Automatic-Reboot ".*";'
+    line: 'Unattended-Upgrade::Automatic-Reboot "{{ autoupdates_reboot | ternary( "true", "false", omit ) }}";'
+    path: /etc/apt/apt.conf.d/50unattended-upgrades
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Configure unattended-upgrades reboot time
+  lineinfile:
+    regexp: '\s*?Unattended-Upgrade::Automatic-Reboot-Time ".*";'
+    line: 'Unattended-Upgrade::Automatic-Reboot-Time "{{ autoupdates_reboot_time }}";'
+    path: /etc/apt/apt.conf.d/50unattended-upgrades
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Enable unattended-upgrades config package-lists
+  lineinfile:
+    line: 'APT::Periodic::Update-Package-Lists "1";'
+    path: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Enable unattended-upgrades config
+  lineinfile:
+    line: 'APT::Periodic::Unattended-Upgrade "1";'
+    path: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: 0644
+

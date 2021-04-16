@@ -1,0 +1,9 @@
+---
+# tasks file for ip.autoupdates
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Load OS-specific steps
+  include: '{{ item }}'
+  with_first_found:
+    - '{{ ansible_os_family|lower }}.yml'
+
