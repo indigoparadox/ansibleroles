@@ -1,0 +1,3 @@
+{% for item in mail_ssmtp_revaliases %}
+{{ item.local }}:{{ item.rewrite }}:{{ mail_ssmtp_relay }}
+{% endfor %}

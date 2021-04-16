@@ -15,4 +15,5 @@ mail_sys_prefix: /usr/local
 mail_postfix_packages:
 - postfix
 - postfix-sasl
+mail_pf_config_dir: /usr/local/etc/postfix
 

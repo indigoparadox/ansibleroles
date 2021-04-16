@@ -15,4 +15,5 @@ mail_sys_prefix: /usr
 mail_postfix_packages:
 - postfix
 - libsasl2-modules
+mail_pf_config_dir: /etc/postfix
 

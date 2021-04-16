@@ -32,7 +32,8 @@ relayhost = {{ mail_relay_host }}
 {% if mail_relay_creds is defined %}
 smtp_use_tls = {{ mail_relay_creds.tls }}
 smtp_sasl_auth_enable = yes
-smtp_sasl_security_options =
+smtp_sasl_security_options = noanonymous
+smtp_tls_security_level = encrypt
 smtp_sasl_password_maps = hash:{{ mail_relay_creds_path }}
 {% endif %}
 {% endif %}
@@ -53,6 +54,9 @@ relay_domains = {{ mail_relay_domains | join( ', ' ) }}
 {% endif %}
 {% if mail_relay_recipient_maps is defined %}
 relay_recipient_maps = {{ mail_relay_recipient_maps }}
+{% endif %}
+{% if mail_pf_header_checks is defined %}
+header_checks = regexp:{{ mail_pf_header_checks_path }}
 {% endif %}
 
 # FIXME

@@ -21,4 +21,5 @@
     backup: yes
     mode: 0644
     owner: root
+  when: mail_ssmtp_revaliases is defined
 

@@ -26,6 +26,7 @@ mail_recipient_delimiter: +
 mail_origin: '{{ inventory_hostname }}'
 mail_pf_host_lookup: dns
 mail_pf_dns_support_level: enabled
+mail_pf_header_checks_path: '{{ mail_pf_config_dir }}/rewrite_headers'
 
 mail_ssmtp_allow_from_override: True
 mail_ssmtp_root:
