@@ -1,0 +1,15 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+# defaults file for ip.log2ram
+
+log2ram_size: 40M
+log2ram_mail: true
+log2ram_rsync: true
+log2ram_path_disk: /var/log
+log2ram_zl2r: false
+log2ram_comp_alg: lz4
+log2ram_disk_size: 60M
+log2ram_service_start_timeout: 300
+log2ram_service_stop_timeout: 300
+log2ram_service_before: basic.target rsyslog.service syslog-ng.service syslog.target systemd-journald.service sysinit.target shutdown.target zram-swap-conf.service apache2.service lighttpd.service
+

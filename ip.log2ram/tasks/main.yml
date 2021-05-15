@@ -1,0 +1,62 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+# tasks file for ip.log2ram
+
+- name: Add log2ram apt key
+  apt_key:
+    url: https://azlux.fr/repo.gpg.key
+    state: present
+    id: CA548A0A0312D8E6
+
+- name: Add log2ram apt repository
+  apt_repository:
+    repo: deb http://packages.azlux.fr/debian/ buster main
+    state: present
+
+- name: Install rsync package
+  apt:
+    name:
+    - rsync
+    state: present
+  when: log2ram_rsync
+
+- name: Install log2ram package
+  apt:
+    name:
+    - log2ram
+    state: present
+
+- name: Configure log2ram
+  template:
+    src: templates/log2ram.conf.j2
+    dest: /etc/log2ram.conf
+    backup: yes
+
+- name: Configure log2ram service after
+  lineinfile:
+    line: 'Before={{ log2ram_service_before }}'
+    state: present
+    regexp: '^Before=.*'
+    path: /etc/systemd/system/log2ram.service
+    create: no
+    backup: no
+
+- name: Configure log2ram service stop timeout
+  lineinfile:
+    line: 'TimeoutStartSec={{ log2ram_service_start_timeout }}'
+    state: present
+    regexp: '^TimeoutStartSec=.*'
+    path: /etc/systemd/system/log2ram.service
+    create: no
+    backup: no
+
+- name: Configure log2ram service start timeout
+  lineinfile:
+    line: 'TimeoutStopSec={{ log2ram_service_stop_timeout }}'
+    state: present
+    regexp: '^TimeoutStopSec=.*'
+    insertafter: '^TimeoutStartSec=.*'
+    path: /etc/systemd/system/log2ram.service
+    create: no
+    backup: no
+
