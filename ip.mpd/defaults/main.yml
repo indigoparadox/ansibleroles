@@ -15,6 +15,7 @@ mpd_auto_update: yes
 mpd_follow_outside_symlinks: no
 mpd_follow_inside_symlinks: yes
 mpd_zeroconf_enabled: no
+mpd_log_level: default
 #mpd_passwords:
 #   password: 'password'
 #   perms: 'read,add,control,admin'
