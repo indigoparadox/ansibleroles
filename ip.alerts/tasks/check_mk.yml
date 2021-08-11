@@ -1,0 +1,55 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+#- name: Add host groups to check_mk
+#  uri:
+#    url: 'http://{{ cmk_server }}/{{ cmk_site }}/check_mk/api/1.0/domain-types/host_group_config/collections/all'
+#    method: POST
+#    body_format: json
+#    status_code: [200, 202, 400]
+#    body:
+#      name: '{{ item.name }}'
+#      alias: '{{ item.
+#    headers:
+#      Content-Type: application/json
+#      accept: application/json
+#      authorization: "Bearer {{ cmk_user }} {{ cmk_token }}"
+#  become: no
+#  delegate_to: localhost
+#  loop: '{{ monitoring_host_groups }}'
+
+- name: Add host to check_mk
+  uri:
+    url: 'http://{{ cmk_server }}/{{ cmk_site }}/check_mk/api/1.0/domain-types/host_config/collections/all'
+    method: POST
+    body_format: json
+    status_code: [200, 202, 400]
+    body:
+      attributes:
+        ipaddress: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+      folder: '/'
+      host_name: "{{ inventory_hostname }}"
+    headers:
+      Content-Type: application/json
+      accept: application/json
+      authorization: "Bearer {{ cmk_user }} {{ cmk_token }}"
+  become: no
+  delegate_to: localhost
+
+#- name: Get host group config
+#  uri:
+#    url: 'http://{{ cmk_server }}/{{ cmk_site }}/check_mk/api/1.0/objects/host_group_config/{{ item.name }}'
+#    method: GET
+#    headers:
+#      Content-Type: application/json
+#      accept: application/json
+#      authorization: "Bearer {{ cmk_user }} {{ cmk_token }}"
+#    status_code: [200, 202, 404]
+#  become: no
+#  delegate_to: localhost
+#  loop: '{{ monitoring_host_groups }}'
+#  register: host_groups
+#
+#- debug:
+#    msg: '{{ host_groups }}'
+

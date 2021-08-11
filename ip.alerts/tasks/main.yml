@@ -3,10 +3,18 @@
 # tasks file for ip.alerts
 
 - include: nscp.yml
-  when: ansible_os_family == 'Windows'
+  when:
+  - alerts_engine == 'nagios'
+  - ansible_os_family == 'Windows'
 
 - include: nrpe.yml
-  when: ansible_os_family == 'Debian' or 
-        ansible_os_family == 'RedHat' or
-        ansible_os_family == 'Kali GNU/Linux'
+  when:
+  - alerts_engine == 'nagios'
+  - ansible_os_family == 'Debian' or 
+    ansible_os_family == 'RedHat' or
+    ansible_os_family == 'Kali GNU/Linux'
+
+- include_tasks: check_mk.yml
+  when:
+  - alerts_engine == 'check_mk'
 
