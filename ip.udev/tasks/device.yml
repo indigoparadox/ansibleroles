@@ -1,0 +1,15 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+# tasks file for ip.udev
+
+- name: Initialize device strings
+  set_fact:
+    udev_add_string: '{% if "subsystem" in item.add %}SUBSYSTEM=="{{ item.add.subsystem }}"{% else %}SUBSYSTEM=="usb"{% endif %}{% for attr_key, attr_val in item.add.attrs.items() %}, ATTR{{ "{" }}{{ attr_key }}{{ "}" }}=="{{ attr_val }}"{% endfor %}{% if "group" in item.add %}, GROUP="{{ item.add.group }}"{% endif %}{% if "mode" in item.add %}, MODE="{{ item.add.mode }}"{% endif %}'
+    udev_rules_name: "{{ item.priority }}-{{ (item.description | lower) | replace(' ', '-') }}.rules"
+  when: "'add' in item"
+
+- name: 'Create {{ udev_rules_name }}'
+  copy:
+    dest: '{{ udev_rules_path }}/{{ udev_rules_name }}'
+    content: '{{ udev_add_string }}'
+
