@@ -1,0 +1,25 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+# tasks file for ip.trackball
+
+- name: Install required packages for trackball
+  package:
+    name:
+    - xinput
+    - at
+    state: present
+  when: trackball_enabled == True
+
+- name: Setup trackball udev rules
+  copy:
+    dest: /etc/udev/rules.d/70-trackball.rules
+    content: 'ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="{{ trackball_vendor_id }}", ATTRS{idProduct}=="{{ trackball_product_id }}", RUN+="{{ trackball_script_path }} udev"'
+  when: trackball_enabled == True
+
+- name: Upload trackball script
+  template:
+    src: templates/trackball.sh.j2
+    dest: '{{ trackball_script_path }}'
+    mode: 0755
+  when: trackball_enabled == True
+

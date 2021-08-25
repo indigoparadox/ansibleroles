@@ -1,0 +1,16 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+# defaults file for ip.trackball
+
+trackball_enabled: False
+
+trackball_script_path: /usr/local/bin/trackball.sh
+trackball_log_path: /tmp/trackball.log
+
+trackball_vendor_id: '046d'
+trackball_product_id: 'c408'
+trackball_name: 'Logitech USB Trackball'
+
+trackball_middle_button: 2
+trackball_sleep_delay: 2
+
