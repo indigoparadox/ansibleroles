@@ -23,3 +23,9 @@
     mode: 0755
   when: trackball_enabled == True
 
+- name: Autostart trackball script
+  template:
+    src: templates/trackball.desktop.j2
+    dest: '{{ trackball_autostart_path }}'
+  when: trackball_enabled == True
+

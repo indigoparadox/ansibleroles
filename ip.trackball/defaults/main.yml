@@ -5,7 +5,8 @@
 trackball_enabled: False
 
 trackball_script_path: /usr/local/bin/trackball.sh
-trackball_log_path: /tmp/trackball.log
+trackball_log_path: /var/log/trackball.log
+trackball_autostart_path: /etc/xdg/autostart/trackball.desktop
 
 trackball_vendor_id: '046d'
 trackball_product_id: 'c408'
