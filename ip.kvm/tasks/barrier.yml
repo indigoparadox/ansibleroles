@@ -1,0 +1,34 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Install barrier package
+  package:
+    name: barrier
+    state: present
+  when: kvm_role == 'server' or kvm_role == 'client'
+
+- name: Configure barrier server
+  template:
+    src: templates/Barrier.conf.j2
+    dest: '/home/{{ kvm_user }}/.config/Debauchee/Barrier.conf'
+    backup: True
+    owner: '{{ kvm_user }}'
+    mode: '0644'
+  when: kvm_role == 'server'
+
+- name: Ensure autostart directory exists
+  file:
+    path: '/home/{{ kvm_user }}/.config/autostart'
+    owner: '{{ kvm_user }}'
+    state: directory
+  when: kvm_role == 'server'
+
+- name: Enable barrier autostart
+  copy:
+    src: files/barrier.desktop
+    dest: '/home/{{ kvm_user }}/.config/autostart/barrier.desktop'
+    owner: '{{ kvm_user }}'
+    mode: '0644'
+    backup: False
+  when: kvm_role == 'server'
+

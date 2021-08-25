@@ -1,0 +1,7 @@
+---
+# defaults file for ip.kvm
+
+kvm_crypto_enabled: False
+kvm_log_path: /var/log/barrier.log
+kvm_listen_port: 24800
+
