@@ -1,0 +1,21 @@
+service checkmk
+{
+	type           = UNLISTED
+	port           = {{ alerts_cmk_port }}
+	socket_type    = stream
+	protocol       = tcp
+	wait           = no
+	user           = root
+	server         = {{ alerts_cmk_agent }}
+{% if alerts_cmk_agent_ip_allow is defined %}
+	only_from      = {{ alerts_cmk_agent_ip_allow }}
+
+{% endif %}
+	# Don't be too verbose. Don't log every check. This might be
+	# commented out for debugging. If this option is commented out
+	# the default options will be used for this service.
+	log_on_success =
+
+	disable        = no
+}
+

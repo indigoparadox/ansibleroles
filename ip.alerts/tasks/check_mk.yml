@@ -1,6 +1,57 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
+- set_fact: cmk_platform="linux" alerts_etc_dir="/etc"
+  when:
+  - ansible_os_family == 'Debian' or
+    ansible_os_family == 'RedHat'
+
+- set_fact: cmk_platform="freebsd" alerts_etc_dir="/usr/local/etc"
+  when:
+  - ansible_os_family == 'FreeBSD'
+
+- name: Install agent prerequisites
+  package:
+    name: bash
+    state: present
+
+- name: Download check_mk agent
+  uri:
+    return_content: True
+    url: 'http://{{ cmk_server }}/{{ cmk_site }}/check_mk/agents/check_mk_agent.{{ cmk_platform }}'
+  register: check_mk_agent_http
+  changed_when: False
+
+- name: Copy agent to binary path
+  copy:
+    content: '{{ check_mk_agent_http.content }}'
+    dest: '{{ alerts_cmk_agent }}'
+    mode: 0755
+  when:
+  - check_mk_agent_http.status == 200
+  register: alerts_cmk_agent_status
+
+- name: Create agent plugins directory
+  file:
+    path: '{{ alerts_cmk_libdir }}/plugins'
+    state: directory
+    recurse: True
+
+- name: Install check_mk plugins
+  include_tasks: check_mk_plugin.yml
+  with_items: '{{ alerts_cmk_plugins }}'
+  register: alerts_cmk_plugins_status
+
+- name: Configure systemd for check_mk agent
+  include_tasks: check_mk_systemd.yml
+  when:
+  - cmk_platform == 'linux'
+
+- name: Configure xinetd for check_mk agent
+  include_tasks: check_mk_xinetd.yml
+  when:
+  - cmk_platform == 'freebsd'
+
 #- name: Add host groups to check_mk
 #  uri:
 #    url: 'http://{{ cmk_server }}/{{ cmk_site }}/check_mk/api/1.0/domain-types/host_group_config/collections/all'
@@ -33,7 +84,7 @@
       Content-Type: application/json
       accept: application/json
       authorization: "Bearer {{ cmk_user }} {{ cmk_token }}"
-  become: no
+  become: False
   delegate_to: localhost
 
 #- name: Get host group config

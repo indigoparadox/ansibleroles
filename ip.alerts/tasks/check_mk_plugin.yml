@@ -1,0 +1,18 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: 'Download check_mk plugin: {{ item }}'
+  uri:
+    return_content: True
+    url: 'http://{{ cmk_server }}/{{ cmk_site }}/check_mk/agents/plugins/{{ item }}'
+  register: check_mk_plugin_http
+  changed_when: False
+
+- name: 'Copy check_mk plugin to plugins path: {{ item }}'
+  copy:
+    content: '{{ check_mk_plugin_http.content }}'
+    dest: '{{ alerts_cmk_libdir }}/plugins/{{ item }}'
+    mode: 0755
+  when:
+  - check_mk_plugin_http.status == 200
+

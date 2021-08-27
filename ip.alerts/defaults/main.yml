@@ -14,3 +14,16 @@ alerts_nrpe_port: 5666
 alerts_nrpe_listen: false
 alerts_nrpe_cmd_prefix: false
 alerts_checks: []
+
+alerts_cmk_agent: /usr/local/bin/check_mk_agent
+alerts_cmk_libdir: /usr/lib/check_mk_agent
+alerts_cmk_confdir: /etc/check_mk
+alerts_cmk_vardir: /var/lib/check_mk_agent
+alerts_cmk_socket: /etc/systemd/system/check_mk.socket
+alerts_cmk_service: /etc/systemd/system/check_mk@.service
+alerts_cmk_port: 6556
+alerts_cmk_max_connections: 3
+alerts_cmk_agent_ip_deny: any
+
+alerts_cmk_plugins: []
+

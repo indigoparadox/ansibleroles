@@ -1,0 +1,20 @@
+# systemd socket definition file
+[Unit]
+Description=Check_MK Agent Socket
+
+[Socket]
+ListenStream={{ alerts_cmk_port }}
+Accept=true
+# To avoid intentional or unintentional overload due to too many parallel
+# queries from one source we set this parameter. It limits the number of
+# concurrent connections per source address. If you need more requests
+# per source system, you can of course increase or remove this value
+# (https://github.com/tribe29/checkmk/pull/157)
+MaxConnectionsPerSource={{ alerts_cmk_max_connections }}
+{% if alerts_cmk_agent_ip_allow is defined %}
+IPAddressDeny={{ alerts_cmk_agent_ip_deny }}
+IPAddressAllow={{ alerts_cmk_agent_ip_allow }}
+{% endif %}
+
+[Install]
+WantedBy=sockets.target

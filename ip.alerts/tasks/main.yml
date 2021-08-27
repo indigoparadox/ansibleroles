@@ -2,12 +2,12 @@
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 # tasks file for ip.alerts
 
-- include: nscp.yml
+- include_tasks: nscp.yml
   when:
   - alerts_engine == 'nagios'
   - ansible_os_family == 'Windows'
 
-- include: nrpe.yml
+- include_tasks: nrpe.yml
   when:
   - alerts_engine == 'nagios'
   - ansible_os_family == 'Debian' or 

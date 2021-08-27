@@ -1,0 +1,36 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Install xinetd package
+  package:
+    name: xinetd
+    state: present
+  register: alerts_cmk_xinetd_pkg_status
+
+- name: Ensure xinetd uses service configs
+  lineinfile:
+    dest: '{{ alerts_etc_dir }}/xinetd.conf'
+    regexp: '^includedir? '
+    line: 'includedir {{ alerts_etc_dir }}/xinetd.d'
+    state: present
+    create: True
+  register: alerts_cmk_xinetd_config_status
+
+- name: Create xinetd service config directory
+  file:
+    path: '{{ alerts_etc_dir }}/xinetd.d'
+    state: directory
+
+- name: Copy xinetd config to service config path
+  template:
+    src: 'templates/cmk_agent.xinetd.conf.j2'
+    dest: '{{ alerts_etc_dir }}/xinetd.d/checkmk'
+  register: alerts_cmk_xinetd_svc_status
+
+- name: Restart xinetd service
+  service:
+    name: xinetd
+    state: restarted
+    enabled: True
+  when: alerts_cmk_xinetd_svc_status.changed or alerts_cmk_xinetd_pkg_status.changed or alerts_cmk_xinetd_config_status.changed
+

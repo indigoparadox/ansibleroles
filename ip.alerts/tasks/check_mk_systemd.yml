@@ -1,0 +1,24 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Copy agent socket to systemd config path
+  template:
+    src: 'templates/cmk_agent.socket.j2'
+    dest: '/etc/systemd/system/check_mk.socket'
+  register: alerts_cmk_socket_status
+
+- name: Copy agent service to systemd config path
+  template:
+    src: 'templates/cmk_agent@.service.j2'
+    dest: '/etc/systemd/system/check_mk@.service'
+  register: alerts_cmk_service_status
+
+- name: Reload check_mk agent
+  systemd:
+    name: check_mk.socket
+    enabled: True
+    daemon_reload: True
+    state: restarted
+  when:
+  - alerts_cmk_service_status.changed or alerts_cmk_socket_status.changed or alerts_cmk_agent_status.changed or alerts_cmk_plugins_status.changed
+
