@@ -16,8 +16,6 @@ alerts_nrpe_cmd_prefix: false
 alerts_checks: []
 
 alerts_cmk_agent: /usr/local/bin/check_mk_agent
-alerts_cmk_libdir: /usr/lib/check_mk_agent
-alerts_cmk_confdir: /etc/check_mk
 alerts_cmk_vardir: /var/lib/check_mk_agent
 alerts_cmk_socket: /etc/systemd/system/check_mk.socket
 alerts_cmk_service: /etc/systemd/system/check_mk@.service

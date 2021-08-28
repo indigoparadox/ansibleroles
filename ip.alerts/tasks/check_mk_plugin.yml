@@ -11,7 +11,7 @@
 - name: 'Copy check_mk plugin to plugins path: {{ item }}'
   copy:
     content: '{{ check_mk_plugin_http.content }}'
-    dest: '{{ alerts_cmk_libdir }}/plugins/{{ item }}'
+    dest: '{{ alerts_lib_dir }}/check_mk_agent/plugins/{{ item }}'
     mode: 0755
   when:
   - check_mk_plugin_http.status == 200

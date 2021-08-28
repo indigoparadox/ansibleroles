@@ -1,12 +1,18 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
-- set_fact: cmk_platform="linux" alerts_etc_dir="/etc"
+- set_fact:
+    cmk_platform: linux
+    alerts_etc_dir: '/etc'
+    alerts_lib_dir: '/usr/lib'
   when:
   - ansible_os_family == 'Debian' or
     ansible_os_family == 'RedHat'
 
-- set_fact: cmk_platform="freebsd" alerts_etc_dir="/usr/local/etc"
+- set_fact:
+    cmk_platform: freebsd
+    alerts_etc_dir: '/usr/local/etc'
+    alerts_lib_dir: '/usr/local/lib'
   when:
   - ansible_os_family == 'FreeBSD'
 
@@ -22,9 +28,16 @@
   register: check_mk_agent_http
   changed_when: False
 
+- name: Update agent paths
+  set_fact:
+    check_mk_agent_http_content: "{{ check_mk_agent_http.content | replace( 'MK_CONFDIR=\"/etc/check_mk\"', 'MK_CONFDIR=\"' + alerts_etc_dir + '/check_mk\"' ) }}"
+  changed_when: False
+  when:
+  - check_mk_agent_http.status == 200
+
 - name: Copy agent to binary path
   copy:
-    content: '{{ check_mk_agent_http.content }}'
+    content: '{{ check_mk_agent_http_content }}'
     dest: '{{ alerts_cmk_agent }}'
     mode: 0755
   when:
@@ -33,7 +46,13 @@
 
 - name: Create agent plugins directory
   file:
-    path: '{{ alerts_cmk_libdir }}/plugins'
+    path: '{{ alerts_lib_dir }}/check_mk_agent/plugins'
+    state: directory
+    recurse: True
+
+- name: Create agent config directory
+  file:
+    path: '{{ alerts_etc_dir }}/check_mk'
     state: directory
     recurse: True
 
