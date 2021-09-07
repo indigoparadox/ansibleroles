@@ -1,2 +1,3 @@
 ---
 # defaults file for ip.autoupdates
+autoupdates_disable: False

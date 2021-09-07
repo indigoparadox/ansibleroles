@@ -6,4 +6,5 @@
   include: '{{ item }}'
   with_first_found:
     - '{{ ansible_os_family|lower }}.yml'
+  when: autoupdates_disable == False
 
