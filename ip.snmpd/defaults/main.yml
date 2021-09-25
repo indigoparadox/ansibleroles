@@ -1,0 +1,25 @@
+---
+# defaults file for ip.snmpd
+
+snmpd_listen: udp:161
+snmpd_location:
+snmpd_views:
+- name: systemonly
+  type: included
+  oid: .1.3.6.1.2.1.1
+- name: systemonly
+  type: included
+  oid: .1.3.6.1.2.1.25.1
+snmpd_communities:
+- rw: False
+  name: public
+  source: default
+  view: systemonly
+snmpd_procs:
+- name: ntalkd
+  max: 4
+- name: mountd
+snmp_disks:
+- path: /
+  free: 10000
+disk       /var  5%
