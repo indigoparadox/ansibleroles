@@ -6,7 +6,7 @@
     name: /etc/ssl/certs
     owner: root
     group: wheel
-    mode: '0644'
+    mode: '0755'
     state: directory
 
 - name: Upload root SSL certificate
