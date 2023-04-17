@@ -1,0 +1,29 @@
+---
+# vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
+
+- name: Install Dropbear
+  package:
+    name:
+    - dropbear-initramfs
+    - cryptsetup-initramfs
+    state: present
+
+- name: Enable boot IP config
+  lineinfile:
+    path: /etc/initramfs-tools/initramfs.conf
+    regexp: '^IP='
+    line: 'IP={{ earlyssh_ip }}::{{ earlyssh_gw }}:{{ earlyssh_nmask }}:{{ earlyssh_hostname }}:{{ earlyssh_iface }}:{{ earlyssh_options }}'
+  register: earlyssh_ipc
+
+- name: Enable dropbear config
+  lineinfile:
+    path: /etc/dropbear-initramfs/config
+    regexp: '^DROPBEAR_OPTIONS='
+    insertafter: '^#DROPBEAR_OPTIONS='
+    line: 'DROPBEAR_OPTIONS="-FEsjk -p {{ earlyssh_port }} -c /bin/cryptroot-unlock"'
+  register: earlyssh_dbc
+
+- name: Rebuild initramfs
+  command: update-initramfs -u
+  when: earlyssh_ipc.changed == true or earlyssh_dbc.changed == true
+
