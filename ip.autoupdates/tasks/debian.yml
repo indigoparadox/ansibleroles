@@ -38,7 +38,12 @@
     group: root
     mode: 0644
 
-- name: Enable unattended-upgrades config package-lists
+- name: Create auto-upgrades config
+  command:
+    cmd: 'dpkg-reconfigure -plow unattended-upgrades'
+    creates: /etc/apt/apt.conf.d/20auto-upgrades
+
+- name: Enable auto-upgrades config package-lists
   lineinfile:
     line: 'APT::Periodic::Update-Package-Lists "1";'
     path: /etc/apt/apt.conf.d/20auto-upgrades
@@ -46,7 +51,7 @@
     group: root
     mode: 0644
 
-- name: Enable unattended-upgrades config
+- name: Enable auto-upgrades config
   lineinfile:
     line: 'APT::Periodic::Unattended-Upgrade "1";'
     path: /etc/apt/apt.conf.d/20auto-upgrades

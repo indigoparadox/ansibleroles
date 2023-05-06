@@ -1,3 +1,5 @@
 ---
 # defaults file for ip.autoupdates
-autoupdates_disable: False
+autoupdates_disable: false
+autoupdates_reboot: false
+autoupdates_reboot_time: '02:00'
