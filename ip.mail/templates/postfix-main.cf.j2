@@ -82,3 +82,7 @@ inet_protocols = ipv4
 
 compatibility_level = 2
 
+{% if mail_masquerade_domains is defined %}
+masquerade_domains = {{ mail_masquerade_domains }}
+{% endif %}
+
