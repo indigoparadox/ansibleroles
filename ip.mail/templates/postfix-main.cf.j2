@@ -24,8 +24,12 @@ smtp_host_lookup = {{ mail_pf_host_lookup }}
 smtpd_recipient_restrictions = {{ mail_recipient_restrictions | join( ' ' ) }}
 smtpd_relay_restrictions = {{ mail_relay_restrictions | join( ' ' ) }}
 myhostname = {{ mail_hostname }}
+{% if mail_alias_maps %}
 alias_maps = {{ mail_alias_maps }}
+{% endif %}
+{% if mail_alias_database is defined %}
 alias_database = {{ mail_alias_database }}
+{% endif %}
 mydestination = {{ mail_destinations | join( ' ' ) }}
 {% if mail_relay_host is defined %}
 relayhost = {{ mail_relay_host }}

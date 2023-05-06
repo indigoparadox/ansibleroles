@@ -1,8 +1,9 @@
 ---
 # vim: set tabstop=2 expandtab shiftwidth=2 smarttab :
 
-mail_alias_maps: 'hash:/etc/aliases'
-mail_alias_database: '{{ mail_alias_maps }}.db'
+#mail_alias_maps: 'hash:/etc/aliases'
+#mail_alias_database: '{{ mail_alias_maps }}.db'
+mail_alias_database: '{{ mail_alias_maps }}'
 mail_config_dir: /usr/local/etc/postfix
 mail_aliases_command: /usr/bin/newaliases
 mail_aliases_path: /etc/mail/aliases
